@@ -1,0 +1,5 @@
+ALTER TABLE T_FP_DOCUMENT
+ADD (
+    CASE_ID varchar2(200),
+    DOCUMENT_REFERENCE varchar2(200)
+);

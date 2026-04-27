@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <properties>
+
+        <property name="log-path">${spring:logging.path}</property>
+        <property name="log-common-name">${spring:logging.common-name}</property>
+        <property name="log-error-name">${spring:logging.error-name}</property>
+        <property name="log-rolling-date">[%d{yyyy-MM-dd}]-%i</property>
+        <property name="pattern-console-color">%highlight{%d{dd MMM yyyy HH:mm:ss,SSS} | %X{req_ip} | %X{request_id} | %X{request_user_type} | %X{channel_id} | %X{request_category} | %X{request_type} | %-5level %logger{36}.%M() @%L - %msg%n}{FATAL=bright red, ERROR=red bold, WARN=yellow bold, INFO=normal, DEBUG=green bold, TRACE=blue}</property>
+        <property name="pattern-file-trace">%d{yyyy-MM-dd | HH:mm:ss} | %X{req_ip} | %X{request_id} | %X{request_user_type} | %X{channel_id} | %X{request_category} | %X{request_type} | %-5level | %logger{36}.%M() @%L - %msg%n</property>
+        <property name="pattern-file-error">%d{dd MMM yyyy HH:mm:ss,SSS} | %X{req_ip} | %X{request_id} | %X{request_user_type} | %X{channel_id} | %X{request_category} | %X{request_type} | %-5level %logger{36}.%M() | @%L | %msg%n</property>
+
+    </properties>
+    <Appenders>
+        <Console name="pattern-console-color" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false" pattern="${pattern-console-color}"/>
+        </Console>
+
+        <RollingFile name="log-file-trace" fileName="${log-path}${log-common-name}.log" filePattern="${log-path}${log-common-name}${log-rolling-date}.log">
+            <PatternLayout>
+                <Pattern>${pattern-file-trace}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="max" min="1" max="10" />
+        </RollingFile>
+
+        <RollingFile name="log-file-error" fileName="${log-path}${log-error-name}.log" filePattern="${log-path}${log-error-name}${log-rolling-date}.log">
+            <PatternLayout>
+                <Pattern>${pattern-file-error}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="max" min="1" max="10" />
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <AsyncLogger name="lk.sampath" level="debug" includeLocation="true" additivity="false">
+            <AppenderRef ref="pattern-console-color"/>
+            <AppenderRef ref="log-file-trace"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.springframework.boot" level="error" includeLocation="true" additivity="false">
+            <AppenderRef ref="pattern-console-color"/>
+            <AppenderRef ref="log-file-error"/>
+        </AsyncLogger>
+        <Root level="error">
+            <AppenderRef ref="pattern-console-color"/>
+            <AppenderRef ref="log-file-trace"/>
+            <AppenderRef ref="log-file-error"/>
+        </Root>
+    </Loggers>
+</Configuration>
