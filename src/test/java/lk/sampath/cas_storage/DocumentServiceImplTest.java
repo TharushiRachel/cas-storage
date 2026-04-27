@@ -414,7 +414,8 @@ public class DocumentServiceImplTest {
     assertEquals(HttpStatus.OK, res.getStatusCode());
     assertNotNull(res.getBody());
     assertNotNull(res.getBody().getResponse());
-    assertEquals("42", res.getBody().getResponse().getDocumentRef());
+    assertNull(res.getBody().getResponse().getDocumentRef());
+    assertEquals(42, res.getBody().getResponse().getDocStorageID());
     assertEquals("SUCCESS", res.getBody().getResponse().getResponceFlag());
 
     then(integrationService).should(never()).createDocumentRefFromDas(any());
@@ -440,7 +441,8 @@ public class DocumentServiceImplTest {
     ResponseEntity<StandardResponse<CreateCaseResponseDTO>> res = service.createCase(request);
 
     assertEquals(HttpStatus.OK, res.getStatusCode());
-    assertEquals("99", res.getBody().getResponse().getDocumentRef());
+    assertNull(res.getBody().getResponse().getDocumentRef());
+    assertEquals(99, res.getBody().getResponse().getDocStorageID());
     then(integrationService).should(never()).createDocumentRefFromDas(any());
     then(docStorageRepository).should(times(1)).save(any(DocStorage.class));
   }

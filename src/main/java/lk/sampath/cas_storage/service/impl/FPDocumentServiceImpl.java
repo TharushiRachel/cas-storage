@@ -48,6 +48,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
             fpDocument.setCaseId(caseResponse.getCaseid());
             fpDocument.setDocumentReference(caseResponse.getDocumentRef());
+            fpDocument.setDocStorageID(caseResponse.getDocStorageID());
 
             FPDocument savedEntity = fpDocumentRepository.save(fpDocument);
             FPDocumentDTO responseDTO = new FPDocumentDTO(savedEntity);

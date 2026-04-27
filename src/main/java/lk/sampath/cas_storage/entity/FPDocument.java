@@ -43,4 +43,7 @@ public class FPDocument extends UserTrackableEntity {
 
     @Column(name = "DOCUMENT_REFERENCE")
     private String documentReference;
+
+    @Column(name = "DOCUMENT_STORAGE_ID")
+    private Integer docStorageID;
 }

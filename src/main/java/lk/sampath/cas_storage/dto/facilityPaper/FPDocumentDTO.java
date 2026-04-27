@@ -31,6 +31,8 @@ public class FPDocumentDTO {
 
     private String documentReference;
 
+    private Integer docStorageID;
+
     private Date createdDate;
 
     private String createdBy;
@@ -51,6 +53,7 @@ public class FPDocumentDTO {
         this.status = fpDocument.getStatus();
         this.caseId = fpDocument.getCaseId();
         this.documentReference = fpDocument.getDocumentReference();
+        this.docStorageID = fpDocument.getDocStorageID();
         this.createdDate = fpDocument.getCreatedDate();
         this.createdBy = fpDocument.getCreatedBy();
         this.modifiedDate = fpDocument.getModifiedDate();

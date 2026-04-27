@@ -360,7 +360,8 @@ public class DocumentServiceImpl implements DocumentService {
     CreateCaseResponseDTO dto = new CreateCaseResponseDTO();
     dto.setResponceFlag("SUCCESS");
     dto.setCaseid(null);
-    dto.setDocumentRef(String.valueOf(saved.getDocStorageID()));
+    dto.setDocumentRef(null);
+    dto.setDocStorageID(saved.getDocStorageID());
     log.info(
         "Document stored in Doc Storage with id {} (DAS case creation not used).",
         saved.getDocStorageID());

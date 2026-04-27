@@ -19,4 +19,7 @@ public class CreateCaseResponseDTO {
   private String responceFlag;
 
   private String documentRef;
+
+  /** Populated when the file is stored only in local Doc Storage (DAS case creation unavailable). */
+  private Integer docStorageID;
 }
