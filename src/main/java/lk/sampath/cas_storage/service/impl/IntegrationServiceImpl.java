@@ -25,7 +25,6 @@ import lk.sampath.cas_storage.util.PropertyFileValue;
 import lk.sampath.cas_storage.util.RequestLogSanitizer;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
@@ -197,16 +196,6 @@ public class IntegrationServiceImpl implements IntegrationService {
 
       try {
         log.info("Calling DAS service to get document by ID: {} with URL: {}", request, dasUrl);
-
-        WebClient webClient =
-            WebClient.builder()
-                .exchangeStrategies(
-                    ExchangeStrategies.builder()
-                        .codecs(
-                            config ->
-                                config.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10 MB
-                        .build())
-                .build();
 
         String response =
             webClient
