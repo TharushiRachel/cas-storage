@@ -20,6 +20,7 @@ import lk.sampath.cas_storage.dto.dasstorage.CreateRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import lk.sampath.cas_storage.service.DocumentService;
 import lk.sampath.cas_storage.util.RequestLogSanitizer;
@@ -103,6 +104,27 @@ public class DocumentController {
     log.info(
         "END | getDocumentStorageByDocStorageID - DocumentController | response : {}",
         response.getStatusCode());
+    return ResponseEntity.ok().body(response.getBody());
+  }
+
+  @GetMapping("/fpDocument/{fpDocumentId}")
+  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(
+      @PathVariable Integer fpDocumentId) throws ApiRequestException {
+    log.info("START | getFPDocumentById - DocumentController | fpDocumentId {}", fpDocumentId);
+    ResponseEntity<StandardResponse<FPDocumentDTO>> response =
+        documentService.getFPDocumentById(fpDocumentId);
+    log.info("END | getFPDocumentById - DocumentController | status {}", response.getStatusCode());
+    return ResponseEntity.ok().body(response.getBody());
+  }
+
+  @GetMapping("/fpDocument/case/{caseId}")
+  public ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(
+      @PathVariable String caseId) throws ApiRequestException {
+    log.info("START | getFPDocumentsByCaseId - DocumentController | caseId {}", caseId);
+    ResponseEntity<StandardResponse<List<FPDocumentDTO>>> response =
+        documentService.getFPDocumentsByCaseId(caseId);
+    log.info(
+        "END | getFPDocumentsByCaseId - DocumentController | status {}", response.getStatusCode());
     return ResponseEntity.ok().body(response.getBody());
   }
 

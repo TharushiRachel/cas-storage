@@ -34,7 +34,6 @@ import lk.sampath.cas_storage.dto.dasstorage.createdocref.CreateDocumentRefReque
 import lk.sampath.cas_storage.dto.dasstorage.createdocref.CreateDocumentRefResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.DocStorage;
-import lk.sampath.cas_storage.entity.FPDocument;
 import lk.sampath.cas_storage.enums.DocumentModule;
 import lk.sampath.cas_storage.enums.ErrorEnums;
 import lk.sampath.cas_storage.exception.ApiRequestException;
@@ -583,6 +582,20 @@ public class DocumentServiceImpl implements DocumentService {
     return ResponseEntity.ok().body(response);
   }
 
+
+  @Override
+  @Transactional(readOnly = true, rollbackFor = ApiRequestException.class)
+  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(Integer fpDocumentId)
+      throws ApiRequestException {
+    return fpDocumentService.getFPDocumentById(fpDocumentId);
+  }
+
+  @Override
+  @Transactional(readOnly = true, rollbackFor = ApiRequestException.class)
+  public ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(
+      String caseId) throws ApiRequestException {
+    return fpDocumentService.getFPDocumentsByCaseId(caseId);
+  }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = ApiRequestException.class)
   public ResponseEntity<StandardResponse<?>> saveDocumentByModule(DocumentModuleDTO request
