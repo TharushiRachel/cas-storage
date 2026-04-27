@@ -37,15 +37,15 @@ public class ApplicationConfig {
    */
   @Bean
   public WebClient webClient(
-      @Value("${apps.http.client.pool-name:das}") String poolName,
-      @Value("${apps.http.client.max-connections:200}") int maxConnections,
-      @Value("${apps.http.client.pending-acquire-max-count:2000}") int pendingAcquireMaxCount,
-      @Value("${apps.http.client.pending-acquire-timeout-ms:45000}") long pendingAcquireTimeoutMs,
-      @Value("${apps.http.client.max-idle-time-seconds:30}") int maxIdleSeconds,
-      @Value("${apps.http.client.max-life-time-seconds:300}") int maxLifeSeconds,
-      @Value("${apps.http.client.connect-timeout-ms:10000}") int connectTimeoutMs,
-      @Value("${apps.http.client.response-timeout-seconds:300}") int responseTimeoutSeconds,
-      @Value("${apps.http.client.max-in-memory-size:10485760}") int maxInMemorySize) {
+      @Value("${apps.http.client.pool-name}") String poolName,
+      @Value("${apps.http.client.max-connections}") int maxConnections,
+      @Value("${apps.http.client.pending-acquire-max-count}") int pendingAcquireMaxCount,
+      @Value("${apps.http.client.pending-acquire-timeout-ms}") long pendingAcquireTimeoutMs,
+      @Value("${apps.http.client.max-idle-time-seconds}") int maxIdleSeconds,
+      @Value("${apps.http.client.max-life-time-seconds}") int maxLifeSeconds,
+      @Value("${apps.http.client.connect-timeout-ms}") int connectTimeoutMs,
+      @Value("${apps.http.client.response-timeout-seconds}") int responseTimeoutSeconds,
+      @Value("${apps.http.client.max-in-memory-size}") int maxInMemorySize) {
 
     ConnectionProvider provider =
         ConnectionProvider.builder(poolName)
