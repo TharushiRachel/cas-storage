@@ -20,19 +20,10 @@ public class FPDocAuthController {
     }
 
     @PostMapping
-    public ResponseEntity<StandardResponse<FPDocAuthDTO>> save(@RequestBody FPDocAuthDTO dto) {
-        FPDocAuthDTO savedDto = fpDocumentService.saveFPDocAuth(dto);
+    public ResponseEntity<StandardResponse<FPDocAuthDTO>> saveOrUpdate(@RequestBody FPDocAuthDTO dto) {
+        FPDocAuthDTO savedDto = fpDocumentService.saveOrUpdateFPDocAuth(dto);
         return new ResponseEntity<>(
-                new StandardResponse<>(true, "Saved Successfully", savedDto),
-                HttpStatus.CREATED
-        );
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<StandardResponse<FPDocAuthDTO>> update(@PathVariable("id") Long id, @RequestBody FPDocAuthDTO dto) {
-        FPDocAuthDTO updatedDto = fpDocumentService.updateFPDocAuth(id, dto);
-        return new ResponseEntity<>(
-                new StandardResponse<>(true, "Updated Successfully", updatedDto),
+                new StandardResponse<>(true, "Saved/Updated Successfully", savedDto),
                 HttpStatus.OK
         );
     }

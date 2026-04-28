@@ -17,9 +17,7 @@ public interface FPDocumentService {
   ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId)
       throws ApiRequestException;
 
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO saveFPDocAuth(lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO dto);
-
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO updateFPDocAuth(Long id, lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO dto);
+  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO saveOrUpdateFPDocAuth(lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO dto);
 
   lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO getFPDocAuth(Long id);
 

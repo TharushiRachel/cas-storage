@@ -133,38 +133,30 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
     @Override
     @Transactional
-    public FPDocAuthDTO saveFPDocAuth(FPDocAuthDTO dto) {
-        FPDocAuthTemp temp = new FPDocAuthTemp();
-        BeanUtils.copyProperties(dto, temp, "id");
-        
-        temp = tempRepository.save(temp);
-        
-        // If it is instantly authorized, move to master
-        if ("Y".equalsIgnoreCase(temp.getIsAuthorized())) {
-            moveToMaster(temp);
+    public FPDocAuthDTO saveOrUpdateFPDocAuth(FPDocAuthDTO dto) {
+        FPDocAuthTemp temp;
+        boolean isUpdate = false;
+
+        if (dto.getId() != null) {
+            temp = tempRepository.findById(dto.getId())
+                    .orElseThrow(() -> new ApiRequestException("Record not found in Temp with ID: " + dto.getId()));
+            isUpdate = true;
+        } else {
+            temp = new FPDocAuthTemp();
         }
-        
-        dto.setId(temp.getId());
-        return dto;
-    }
 
-    @Override
-    @Transactional
-    public FPDocAuthDTO updateFPDocAuth(Long id, FPDocAuthDTO dto) {
-        FPDocAuthTemp temp = tempRepository.findById(id)
-                .orElseThrow(() -> new ApiRequestException("Record not found in Temp with ID: " + id));
-
-        // Update temp record
         BeanUtils.copyProperties(dto, temp, "id");
         temp = tempRepository.save(temp);
 
-        // Create audit record after updating with new values
-        FPDocAuthAud aud = new FPDocAuthAud();
-        BeanUtils.copyProperties(temp, aud, "id"); // Base fields
-        aud.setId(temp.getId());
-        aud.setAudDate(new Date());
-        aud.setAudAction("UPDATE");
-        audRepository.save(aud);
+        // If it's an update, add an audit record
+        if (isUpdate) {
+            FPDocAuthAud aud = new FPDocAuthAud();
+            BeanUtils.copyProperties(temp, aud, "id"); // Base fields
+            aud.setId(temp.getId());
+            aud.setAudDate(new Date());
+            aud.setAudAction("UPDATE");
+            audRepository.save(aud);
+        }
 
         // If authorized, move to master
         if ("Y".equalsIgnoreCase(temp.getIsAuthorized())) {
