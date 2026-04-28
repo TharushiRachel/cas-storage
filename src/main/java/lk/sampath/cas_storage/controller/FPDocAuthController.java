@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/fp-doc-auth")
+@CrossOrigin("*")
 public class FPDocAuthController {
 
     private final FPDocumentService fpDocumentService;
