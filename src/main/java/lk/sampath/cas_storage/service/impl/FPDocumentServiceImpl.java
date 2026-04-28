@@ -154,17 +154,17 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         FPDocAuthTemp temp = tempRepository.findById(id)
                 .orElseThrow(() -> new ApiRequestException("Record not found in Temp with ID: " + id));
 
-        // Create audit record before updating
+        // Update temp record
+        BeanUtils.copyProperties(dto, temp, "id");
+        temp = tempRepository.save(temp);
+
+        // Create audit record after updating with new values
         FPDocAuthAud aud = new FPDocAuthAud();
         BeanUtils.copyProperties(temp, aud, "id"); // Base fields
         aud.setId(temp.getId());
         aud.setAudDate(new Date());
         aud.setAudAction("UPDATE");
         audRepository.save(aud);
-
-        // Update temp record
-        BeanUtils.copyProperties(dto, temp, "id");
-        temp = tempRepository.save(temp);
 
         // If authorized, move to master
         if ("Y".equalsIgnoreCase(temp.getIsAuthorized())) {
