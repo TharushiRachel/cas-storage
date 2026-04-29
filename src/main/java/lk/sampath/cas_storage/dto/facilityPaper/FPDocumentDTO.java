@@ -5,6 +5,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import lk.sampath.cas_storage.dto.dasstorage.CreateRequestDTO;
 import lk.sampath.cas_storage.entity.FPDocument;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.enums.Status;
 import lombok.Data;
 
@@ -26,6 +27,8 @@ public class FPDocumentDTO {
     private String uploadedDivCode;
 
     private Status status;
+
+    private FPDocStatus docStatus;
 
     private String caseId;
 
@@ -51,6 +54,7 @@ public class FPDocumentDTO {
         this.uploadedUserDisplayName = fpDocument.getUploadedUserDisplayName();
         this.uploadedDivCode = fpDocument.getUploadedDivCode();
         this.status = fpDocument.getStatus();
+        this.docStatus = fpDocument.getDocStatus();
         this.caseId = fpDocument.getCaseId();
         this.documentReference = fpDocument.getDocumentReference();
         this.docStorageID = fpDocument.getDocStorageID();

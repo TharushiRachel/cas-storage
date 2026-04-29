@@ -21,6 +21,7 @@ import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import lk.sampath.cas_storage.service.DocumentService;
 import lk.sampath.cas_storage.util.RequestLogSanitizer;
@@ -104,6 +105,20 @@ public class DocumentController {
     log.info(
         "END | getDocumentStorageByDocStorageID - DocumentController | response : {}",
         response.getStatusCode());
+    return ResponseEntity.ok().body(response.getBody());
+  }
+
+  @GetMapping("/fpDocument/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
+  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperAndDocStatus(
+      @PathVariable Integer facilityPaperId, @PathVariable FPDocStatus docStatus)
+      throws ApiRequestException {
+    log.info(
+        "START | getFPDocumentByFacilityPaperAndDocStatus | facilityPaperId {} docStatus {}",
+        facilityPaperId,
+        docStatus);
+    ResponseEntity<StandardResponse<FPDocumentDTO>> response =
+        documentService.getFPDocumentByFacilityPaperIdAndDocStatus(facilityPaperId, docStatus);
+    log.info("END | getFPDocumentByFacilityPaperAndDocStatus | status {}", response.getStatusCode());
     return ResponseEntity.ok().body(response.getBody());
   }
 

@@ -12,9 +12,9 @@ import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.FPDocAuthAud;
 import lk.sampath.cas_storage.entity.FPDocAuthMaster;
 import lk.sampath.cas_storage.entity.FPDocAuthTemp;
-import lk.sampath.cas_storage.entity.BaseFPDocAuth;
 import lk.sampath.cas_storage.entity.FPDocument;
 import lk.sampath.cas_storage.enums.ErrorEnums;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import lk.sampath.cas_storage.repository.FPDocAuthAudRepository;
 import lk.sampath.cas_storage.repository.FPDocAuthMasterRepository;
@@ -67,6 +67,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             fpDocument.setUploadedUserDisplayName(fpDocumentDTO.getUploadedUserDisplayName());
             fpDocument.setUploadedDivCode(fpDocumentDTO.getUploadedDivCode());
             fpDocument.setStatus(fpDocumentDTO.getStatus());
+            fpDocument.setDocStatus(fpDocumentDTO.getDocStatus());
             fpDocument.setCreatedBy(fpDocumentDTO.getCreatedBy());
             fpDocument.setCreatedDate(fpDocumentDTO.getCreatedDate());
 
@@ -90,6 +91,24 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             log.error("Error saving FP Document: ", e);
             throw new ApiRequestException("Unable to Save FP Document");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperIdAndDocStatus(
+            Integer facilityPaperId, FPDocStatus docStatus) throws ApiRequestException {
+        log.info(
+                "START : getFPDocumentByFacilityPaperIdAndDocStatus facilityPaperId {} docStatus {}",
+                facilityPaperId,
+                docStatus);
+        FPDocument entity = resolveSingleFpDocumentForFacilityPaper(facilityPaperId, docStatus);
+        StandardResponse<FPDocumentDTO> response =
+                new StandardResponse<>(
+                        ErrorEnums.SUCCESS_CODE.getStatus(),
+                        ErrorEnums.SUCCESS_CODE.getLabel(),
+                        new FPDocumentDTO(entity));
+        log.info("END : getFPDocumentByFacilityPaperIdAndDocStatus");
+        return ResponseEntity.ok().body(response);
     }
 
     @Override
@@ -207,22 +226,64 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FPDocAuthWithDocumentDTO> getFPDocAuthTempWithFpDocument(Integer fpDocId) {
-        List<FPDocAuthTemp> rows =
-                fpDocId == null
-                        ? tempRepository.findAllWithFpDocument()
-                        : tempRepository.findByFpDocumentIdWithFetch(fpDocId);
-        return rows.stream().map(this::toAuthWithDocumentFromTemp).collect(Collectors.toList());
+    public FPDocAuthWithDocumentDTO getFPDocAuthTempWithFpDocumentByFacilityPaperId(
+            Integer facilityPaperId, FPDocStatus docStatus) {
+        FPDocument fpDoc = resolveSingleFpDocumentForFacilityPaper(facilityPaperId, docStatus);
+        return tempRepository
+                .findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID())
+                .map(this::toAuthWithDocumentFromTemp)
+                .orElseThrow(
+                        () ->
+                                new ApiRequestException(
+                                        "No FP doc auth temp for facility paper id "
+                                                + facilityPaperId
+                                                + " and doc status "
+                                                + docStatus));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FPDocAuthWithDocumentDTO> getFPDocAuthMasterWithFpDocument(Integer fpDocId) {
-        List<FPDocAuthMaster> rows =
-                fpDocId == null
-                        ? masterRepository.findAllWithFpDocument()
-                        : masterRepository.findByFpDocumentIdWithFetch(fpDocId);
-        return rows.stream().map(this::toAuthWithDocumentFromMaster).collect(Collectors.toList());
+    public FPDocAuthWithDocumentDTO getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
+            Integer facilityPaperId, FPDocStatus docStatus) {
+        FPDocument fpDoc = resolveSingleFpDocumentForFacilityPaper(facilityPaperId, docStatus);
+        return masterRepository
+                .findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID())
+                .map(this::toAuthWithDocumentFromMaster)
+                .orElseThrow(
+                        () ->
+                                new ApiRequestException(
+                                        "No FP doc auth master for facility paper id "
+                                                + facilityPaperId
+                                                + " and doc status "
+                                                + docStatus));
+    }
+
+    private FPDocument resolveSingleFpDocumentForFacilityPaper(
+            Integer facilityPaperId, FPDocStatus docStatus) {
+        if (facilityPaperId == null) {
+            throw new ApiRequestException("Facility paper id is required");
+        }
+        if (docStatus == null) {
+            throw new ApiRequestException("Doc status is required");
+        }
+        List<FPDocument> docs =
+                fpDocumentRepository.findByFacilityPaperIDAndDocStatus(facilityPaperId, docStatus);
+        if (docs.isEmpty()) {
+            throw new ApiRequestException(
+                    "No FP document for facility paper id "
+                            + facilityPaperId
+                            + " and doc status "
+                            + docStatus);
+        }
+        if (docs.size() > 1) {
+            throw new ApiRequestException(
+                    "Multiple FP documents for facility paper id "
+                            + facilityPaperId
+                            + " and doc status "
+                            + docStatus
+                            + "; expected exactly one");
+        }
+        return docs.get(0);
     }
 
     private FPDocAuthWithDocumentDTO toAuthWithDocumentFromTemp(FPDocAuthTemp temp) {
@@ -243,8 +304,9 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
     private void insertAuditRowForUpdate(FPDocAuthTemp tempBeforeChange) {
         FPDocAuthAud aud = new FPDocAuthAud();
-        BeanUtils.copyProperties(tempBeforeChange, aud, "id");
+        BeanUtils.copyProperties(tempBeforeChange, aud, "id", "fpDocument");
         aud.setId(tempBeforeChange.getId());
+        aud.setFpDocId(resolveFpDocumentId(tempBeforeChange.getFpDocument()));
         aud.setAudDate(new Date());
         aud.setAudAction("UPDATE");
         audRepository.save(aud);
@@ -252,8 +314,9 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
     private void insertAuditRowForPromotion(FPDocAuthTemp tempFinalState) {
         FPDocAuthAud aud = new FPDocAuthAud();
-        BeanUtils.copyProperties(tempFinalState, aud, "id");
+        BeanUtils.copyProperties(tempFinalState, aud, "id", "fpDocument");
         aud.setId(tempFinalState.getId());
+        aud.setFpDocId(resolveFpDocumentId(tempFinalState.getFpDocument()));
         aud.setAudDate(new Date());
         aud.setAudAction("PROMOTED_TO_MASTER");
         audRepository.save(aud);
@@ -269,12 +332,12 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         return convertMasterToDTO(master);
     }
 
-    private void applyFpDocumentReference(BaseFPDocAuth entity, Integer fpDocId) {
+    private void applyFpDocumentReference(FPDocAuthTemp temp, Integer fpDocId) {
         if (fpDocId == null) {
-            entity.setFpDocument(null);
+            temp.setFpDocument(null);
             return;
         }
-        entity.setFpDocument(fpDocumentRepository.getReferenceById(fpDocId));
+        temp.setFpDocument(fpDocumentRepository.getReferenceById(fpDocId));
     }
 
     private static Integer resolveFpDocumentId(FPDocument fpDocument) {

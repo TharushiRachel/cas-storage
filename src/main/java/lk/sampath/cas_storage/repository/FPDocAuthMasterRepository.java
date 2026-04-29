@@ -11,13 +11,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FPDocAuthMasterRepository extends JpaRepository<FPDocAuthMaster, Long> {
 
-  @Query("SELECT DISTINCT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument")
-  List<FPDocAuthMaster> findAllWithFpDocument();
+    @Query("SELECT DISTINCT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument")
+    List<FPDocAuthMaster> findAllWithFpDocument();
 
-  @Query(
-      "SELECT DISTINCT m FROM FPDocAuthMaster m JOIN FETCH m.fpDocument d WHERE d.fpDocumentID = :fpDocId")
-  List<FPDocAuthMaster> findByFpDocumentIdWithFetch(@Param("fpDocId") Integer fpDocId);
+    @Query(
+            "SELECT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument d WHERE d.fpDocumentID = :fpDocId")
+    Optional<FPDocAuthMaster> findByFpDocumentIdWithFetch(@Param("fpDocId") Integer fpDocId);
 
-  @Query("SELECT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument WHERE m.id = :id")
-  Optional<FPDocAuthMaster> findByIdWithFpDocument(@Param("id") Long id);
+    @Query("SELECT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument WHERE m.id = :id")
+    Optional<FPDocAuthMaster> findByIdWithFpDocument(@Param("id") Long id);
 }

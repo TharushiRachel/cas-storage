@@ -1,8 +1,8 @@
 package lk.sampath.cas_storage.entity;
 
 import jakarta.persistence.*;
-import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.common.UserTrackableEntity;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.enums.Status;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,6 +37,10 @@ public class FPDocument extends UserTrackableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "STATUS")
     private Status status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "DOC_STATUS")
+    private FPDocStatus docStatus;
 
     @Column(name = "CASE_ID")
     private String caseId;

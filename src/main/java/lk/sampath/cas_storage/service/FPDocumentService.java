@@ -3,6 +3,7 @@ package lk.sampath.cas_storage.service;
 import java.util.List;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import org.springframework.http.ResponseEntity;
 
@@ -13,6 +14,9 @@ public interface FPDocumentService {
 
   ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(Integer fpDocumentId)
       throws ApiRequestException;
+
+  ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperIdAndDocStatus(
+      Integer facilityPaperId, FPDocStatus docStatus) throws ApiRequestException;
 
   ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId)
       throws ApiRequestException;
@@ -26,9 +30,11 @@ public interface FPDocumentService {
   lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO
       getAllFPDocAuthTempAndMaster();
 
-  java.util.List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO>
-      getFPDocAuthTempWithFpDocument(Integer fpDocId);
+  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO
+      getFPDocAuthTempWithFpDocumentByFacilityPaperId(
+          Integer facilityPaperId, FPDocStatus docStatus);
 
-  java.util.List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO>
-      getFPDocAuthMasterWithFpDocument(Integer fpDocId);
+  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO
+      getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
+          Integer facilityPaperId, FPDocStatus docStatus);
 }

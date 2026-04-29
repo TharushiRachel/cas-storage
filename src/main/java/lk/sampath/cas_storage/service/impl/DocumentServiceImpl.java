@@ -36,6 +36,7 @@ import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.DocStorage;
 import lk.sampath.cas_storage.enums.DocumentModule;
 import lk.sampath.cas_storage.enums.ErrorEnums;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import lk.sampath.cas_storage.repository.DocStorageRepository;
 import lk.sampath.cas_storage.repository.FPDocumentRepository;
@@ -588,6 +589,15 @@ public class DocumentServiceImpl implements DocumentService {
   public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(Integer fpDocumentId)
       throws ApiRequestException {
     return fpDocumentService.getFPDocumentById(fpDocumentId);
+  }
+
+  @Override
+  @Transactional(readOnly = true, rollbackFor = ApiRequestException.class)
+  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperIdAndDocStatus(
+      Integer facilityPaperId, FPDocStatus docStatus)
+      throws ApiRequestException {
+    return fpDocumentService.getFPDocumentByFacilityPaperIdAndDocStatus(
+        facilityPaperId, docStatus);
   }
 
   @Override

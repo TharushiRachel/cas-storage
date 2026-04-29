@@ -21,6 +21,7 @@ import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
+import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import org.springframework.http.ResponseEntity;
 
@@ -47,6 +48,9 @@ public interface DocumentService {
 
   ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(Integer fpDocumentId)
       throws ApiRequestException;
+
+  ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperIdAndDocStatus(
+      Integer facilityPaperId, FPDocStatus docStatus) throws ApiRequestException;
 
   ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId)
       throws ApiRequestException;

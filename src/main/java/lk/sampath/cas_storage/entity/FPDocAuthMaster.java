@@ -16,4 +16,10 @@ public class FPDocAuthMaster extends BaseFPDocAuth {
     @Column(name = "ID")
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "FP_DOC_ID",
+            referencedColumnName = "FP_DOCUMENT_ID",
+            unique = true)
+    private FPDocument fpDocument;
 }
