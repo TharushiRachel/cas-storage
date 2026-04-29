@@ -1,6 +1,7 @@
 package lk.sampath.cas_storage.controller;
 
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
 import lk.sampath.cas_storage.service.FPDocumentService;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,15 @@ public class FPDocAuthController {
         FPDocAuthDTO savedDto = fpDocumentService.saveOrUpdateFPDocAuth(dto);
         return new ResponseEntity<>(
                 new StandardResponse<>(true, "Saved/Updated Successfully", savedDto),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/combined")
+    public ResponseEntity<StandardResponse<FPDocAuthCombinedListDTO>> getTempAndMaster() {
+        FPDocAuthCombinedListDTO combined = fpDocumentService.getAllFPDocAuthTempAndMaster();
+        return new ResponseEntity<>(
+                new StandardResponse<>(true, "Fetched Successfully", combined),
                 HttpStatus.OK
         );
     }

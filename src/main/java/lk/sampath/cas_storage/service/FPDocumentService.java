@@ -22,4 +22,6 @@ public interface FPDocumentService {
   lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO getFPDocAuth(Long id);
 
   List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO> getAllFPDocAuth();
+
+  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO getAllFPDocAuthTempAndMaster();
 }
