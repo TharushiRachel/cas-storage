@@ -2,10 +2,6 @@ package lk.sampath.cas_storage.service.impl;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
@@ -16,6 +12,7 @@ import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.FPDocAuthAud;
 import lk.sampath.cas_storage.entity.FPDocAuthMaster;
 import lk.sampath.cas_storage.entity.FPDocAuthTemp;
+import lk.sampath.cas_storage.entity.BaseFPDocAuth;
 import lk.sampath.cas_storage.entity.FPDocument;
 import lk.sampath.cas_storage.enums.ErrorEnums;
 import lk.sampath.cas_storage.exception.ApiRequestException;
@@ -144,7 +141,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         boolean isUpdate = false;
 
         if (dto.getId() != null) {
-            temp = tempRepository.findById(dto.getId())
+            temp = tempRepository.findByIdWithFpDocument(dto.getId())
                     .orElseThrow(() -> new ApiRequestException("Record not found in Temp with ID: " + dto.getId()));
             isUpdate = true;
         } else {
@@ -156,7 +153,8 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             insertAuditRowForUpdate(temp);
         }
 
-        BeanUtils.copyProperties(dto, temp, "id");
+        BeanUtils.copyProperties(dto, temp, "id", "fpDocId");
+        applyFpDocumentReference(temp, dto.getFpDocId());
         temp = tempRepository.save(temp);
 
         // If authorized, persist to master, add audit, remove temp
@@ -168,14 +166,15 @@ public class FPDocumentServiceImpl implements FPDocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FPDocAuthDTO getFPDocAuth(Long id) {
         return tempRepository
-                .findById(id)
+                .findByIdWithFpDocument(id)
                 .map(this::convertToDTO)
                 .orElseGet(
                     () ->
                         masterRepository
-                            .findById(id)
+                            .findByIdWithFpDocument(id)
                             .map(this::convertMasterToDTO)
                             .orElseThrow(
                                 () ->
@@ -184,21 +183,23 @@ public class FPDocumentServiceImpl implements FPDocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FPDocAuthDTO> getAllFPDocAuth() {
-        return tempRepository.findAll().stream()
+        return tempRepository.findAllWithFpDocument().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FPDocAuthCombinedListDTO getAllFPDocAuthTempAndMaster() {
         FPDocAuthCombinedListDTO combined = new FPDocAuthCombinedListDTO();
         combined.setTempRecords(
-                tempRepository.findAll().stream()
+                tempRepository.findAllWithFpDocument().stream()
                         .map(this::convertToDTO)
                         .collect(Collectors.toList()));
         combined.setMasterRecords(
-                masterRepository.findAll().stream()
+                masterRepository.findAllWithFpDocument().stream()
                         .map(this::convertMasterToDTO)
                         .collect(Collectors.toList()));
         return combined;
@@ -218,34 +219,24 @@ public class FPDocumentServiceImpl implements FPDocumentService {
     @Transactional(readOnly = true)
     public List<FPDocAuthWithDocumentDTO> getFPDocAuthMasterWithFpDocument(Integer fpDocId) {
         List<FPDocAuthMaster> rows =
-                fpDocId == null ? masterRepository.findAll() : masterRepository.findByFpDocId(fpDocId);
-        Set<Integer> docIds =
-                rows.stream()
-                        .map(FPDocAuthMaster::getFpDocId)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toSet());
-        Map<Integer, FPDocument> docById =
-                docIds.isEmpty()
-                        ? Map.of()
-                        : fpDocumentRepository.findAllById(docIds).stream()
-                                .collect(Collectors.toMap(FPDocument::getFpDocumentID, Function.identity()));
-        return rows.stream()
-                .map(
-                        m -> {
-                            FPDocAuthWithDocumentDTO out = new FPDocAuthWithDocumentDTO();
-                            out.setAuthRecord(convertMasterToDTO(m));
-                            Integer id = m.getFpDocId();
-                            FPDocument doc = id == null ? null : docById.get(id);
-                            out.setFpDocument(doc == null ? null : new FPDocumentDTO(doc));
-                            return out;
-                        })
-                .collect(Collectors.toList());
+                fpDocId == null
+                        ? masterRepository.findAllWithFpDocument()
+                        : masterRepository.findByFpDocumentIdWithFetch(fpDocId);
+        return rows.stream().map(this::toAuthWithDocumentFromMaster).collect(Collectors.toList());
     }
 
     private FPDocAuthWithDocumentDTO toAuthWithDocumentFromTemp(FPDocAuthTemp temp) {
-        FPDocAuthWithDocumentDTO out = new FPDocAuthWithDocumentDTO();
-        out.setAuthRecord(convertToDTO(temp));
         FPDocument doc = temp.getFpDocument();
+        FPDocAuthWithDocumentDTO out = new FPDocAuthWithDocumentDTO();
+        out.setAuthRecord(convertToDTO(temp, resolveFpDocumentId(doc)));
+        out.setFpDocument(doc == null ? null : new FPDocumentDTO(doc));
+        return out;
+    }
+
+    private FPDocAuthWithDocumentDTO toAuthWithDocumentFromMaster(FPDocAuthMaster master) {
+        FPDocument doc = master.getFpDocument();
+        FPDocAuthWithDocumentDTO out = new FPDocAuthWithDocumentDTO();
+        out.setAuthRecord(convertMasterToDTO(master, resolveFpDocumentId(doc)));
         out.setFpDocument(doc == null ? null : new FPDocumentDTO(doc));
         return out;
     }
@@ -256,7 +247,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         aud.setId(tempBeforeChange.getId());
         aud.setAudDate(new Date());
         aud.setAudAction("UPDATE");
-        audRepository.saveAndFlush(aud);
+        audRepository.save(aud);
     }
 
     private void insertAuditRowForPromotion(FPDocAuthTemp tempFinalState) {
@@ -265,7 +256,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         aud.setId(tempFinalState.getId());
         aud.setAudDate(new Date());
         aud.setAudAction("PROMOTED_TO_MASTER");
-        audRepository.saveAndFlush(aud);
+        audRepository.save(aud);
     }
 
     private FPDocAuthDTO promoteTempToMaster(FPDocAuthTemp temp) {
@@ -273,21 +264,42 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         FPDocAuthMaster master = new FPDocAuthMaster();
         BeanUtils.copyProperties(temp, master, "id");
         master.setId(temp.getId());
-        master = masterRepository.saveAndFlush(master);
+        master = masterRepository.save(master);
         tempRepository.deleteById(temp.getId());
-        tempRepository.flush();
         return convertMasterToDTO(master);
     }
 
+    private void applyFpDocumentReference(BaseFPDocAuth entity, Integer fpDocId) {
+        if (fpDocId == null) {
+            entity.setFpDocument(null);
+            return;
+        }
+        entity.setFpDocument(fpDocumentRepository.getReferenceById(fpDocId));
+    }
+
+    private static Integer resolveFpDocumentId(FPDocument fpDocument) {
+        return fpDocument == null ? null : fpDocument.getFpDocumentID();
+    }
+
     private FPDocAuthDTO convertToDTO(FPDocAuthTemp temp) {
+        return convertToDTO(temp, resolveFpDocumentId(temp.getFpDocument()));
+    }
+
+    private FPDocAuthDTO convertToDTO(FPDocAuthTemp temp, Integer fpDocId) {
         FPDocAuthDTO dto = new FPDocAuthDTO();
         BeanUtils.copyProperties(temp, dto);
+        dto.setFpDocId(fpDocId);
         return dto;
     }
 
     private FPDocAuthDTO convertMasterToDTO(FPDocAuthMaster master) {
+        return convertMasterToDTO(master, resolveFpDocumentId(master.getFpDocument()));
+    }
+
+    private FPDocAuthDTO convertMasterToDTO(FPDocAuthMaster master, Integer fpDocId) {
         FPDocAuthDTO dto = new FPDocAuthDTO();
         BeanUtils.copyProperties(master, dto);
+        dto.setFpDocId(fpDocId);
         return dto;
     }
 }

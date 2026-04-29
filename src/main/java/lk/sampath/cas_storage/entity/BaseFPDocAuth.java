@@ -1,16 +1,22 @@
 package lk.sampath.cas_storage.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
+import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Date;
 
 @Getter
 @Setter
 @MappedSuperclass
 public class BaseFPDocAuth {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "FP_DOC_ID", referencedColumnName = "FP_DOCUMENT_ID")
+    private FPDocument fpDocument;
 
     @Column(name = "FACILITY_PAPER_ID")
     private Integer facilityPaperId;

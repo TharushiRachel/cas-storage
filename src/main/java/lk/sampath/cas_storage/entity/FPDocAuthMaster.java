@@ -16,7 +16,4 @@ public class FPDocAuthMaster extends BaseFPDocAuth {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "FP_DOC_ID")
-    private Integer fpDocId;
-
 }
