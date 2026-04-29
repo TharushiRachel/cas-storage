@@ -40,27 +40,27 @@ public class FPDocAuthController {
     }
 
     @GetMapping("/temp-with-fp-document/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
-    public ResponseEntity<StandardResponse<FPDocAuthWithDocumentDTO>> getTempWithFpDocument(
+    public ResponseEntity<StandardResponse<java.util.List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(
             @PathVariable("facilityPaperId") Integer facilityPaperId,
             @PathVariable("docStatus") FPDocStatus docStatus) {
-        FPDocAuthWithDocumentDTO dto =
+        java.util.List<FPDocAuthWithDocumentDTO> dtoList =
                 fpDocumentService.getFPDocAuthTempWithFpDocumentByFacilityPaperId(
                         facilityPaperId, docStatus);
         return new ResponseEntity<>(
-                new StandardResponse<>(true, "Fetched Successfully", dto),
+                new StandardResponse<>(true, "Fetched Successfully", dtoList),
                 HttpStatus.OK
         );
     }
 
     @GetMapping("/master-with-fp-document/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
-    public ResponseEntity<StandardResponse<FPDocAuthWithDocumentDTO>> getMasterWithFpDocument(
+    public ResponseEntity<StandardResponse<java.util.List<FPDocAuthWithDocumentDTO>>> getMasterWithFpDocument(
             @PathVariable("facilityPaperId") Integer facilityPaperId,
             @PathVariable("docStatus") FPDocStatus docStatus) {
-        FPDocAuthWithDocumentDTO dto =
+        java.util.List<FPDocAuthWithDocumentDTO> dtoList =
                 fpDocumentService.getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
                         facilityPaperId, docStatus);
         return new ResponseEntity<>(
-                new StandardResponse<>(true, "Fetched Successfully", dto),
+                new StandardResponse<>(true, "Fetched Successfully", dtoList),
                 HttpStatus.OK
         );
     }

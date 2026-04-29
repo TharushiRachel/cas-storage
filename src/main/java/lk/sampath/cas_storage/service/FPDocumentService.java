@@ -30,11 +30,11 @@ public interface FPDocumentService {
   lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO
       getAllFPDocAuthTempAndMaster();
 
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO
+  List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO>
       getFPDocAuthTempWithFpDocumentByFacilityPaperId(
           Integer facilityPaperId, FPDocStatus docStatus);
 
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO
+  List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO>
       getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
           Integer facilityPaperId, FPDocStatus docStatus);
 }

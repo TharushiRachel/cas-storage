@@ -226,39 +226,61 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
     @Override
     @Transactional(readOnly = true)
-    public FPDocAuthWithDocumentDTO getFPDocAuthTempWithFpDocumentByFacilityPaperId(
+    public List<FPDocAuthWithDocumentDTO> getFPDocAuthTempWithFpDocumentByFacilityPaperId(
             Integer facilityPaperId, FPDocStatus docStatus) {
-        FPDocument fpDoc = resolveSingleFpDocumentForFacilityPaper(facilityPaperId, docStatus);
-        return tempRepository
-                .findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID())
+        List<FPDocument> fpDocs = resolveFpDocumentsForFacilityPaper(facilityPaperId, docStatus);
+        List<FPDocAuthWithDocumentDTO> results = fpDocs.stream()
+                .map(fpDoc -> tempRepository.findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID()).orElse(null))
+                .filter(java.util.Objects::nonNull)
                 .map(this::toAuthWithDocumentFromTemp)
-                .orElseThrow(
-                        () ->
-                                new ApiRequestException(
-                                        "No FP doc auth temp for facility paper id "
-                                                + facilityPaperId
-                                                + " and doc status "
-                                                + docStatus));
+                .collect(Collectors.toList());
+
+        if (results.isEmpty()) {
+            throw new ApiRequestException(
+                    "No FP doc auth temp for facility paper id "
+                            + facilityPaperId
+                            + " and doc status "
+                            + docStatus);
+        }
+        return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public FPDocAuthWithDocumentDTO getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
+    public List<FPDocAuthWithDocumentDTO> getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
             Integer facilityPaperId, FPDocStatus docStatus) {
-        FPDocument fpDoc = resolveSingleFpDocumentForFacilityPaper(facilityPaperId, docStatus);
-        return masterRepository
-                .findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID())
+        List<FPDocument> fpDocs = resolveFpDocumentsForFacilityPaper(facilityPaperId, docStatus);
+        List<FPDocAuthWithDocumentDTO> results = fpDocs.stream()
+                .map(fpDoc -> masterRepository.findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID()).orElse(null))
+                .filter(java.util.Objects::nonNull)
                 .map(this::toAuthWithDocumentFromMaster)
-                .orElseThrow(
-                        () ->
-                                new ApiRequestException(
-                                        "No FP doc auth master for facility paper id "
-                                                + facilityPaperId
-                                                + " and doc status "
-                                                + docStatus));
+                .collect(Collectors.toList());
+
+        if (results.isEmpty()) {
+            throw new ApiRequestException(
+                    "No FP doc auth master for facility paper id "
+                            + facilityPaperId
+                            + " and doc status "
+                            + docStatus);
+        }
+        return results;
     }
 
     private FPDocument resolveSingleFpDocumentForFacilityPaper(
+            Integer facilityPaperId, FPDocStatus docStatus) {
+        List<FPDocument> docs = resolveFpDocumentsForFacilityPaper(facilityPaperId, docStatus);
+        if (docs.size() > 1) {
+            throw new ApiRequestException(
+                    "Multiple FP documents for facility paper id "
+                            + facilityPaperId
+                            + " and doc status "
+                            + docStatus
+                            + "; expected exactly one");
+        }
+        return docs.get(0);
+    }
+
+    private List<FPDocument> resolveFpDocumentsForFacilityPaper(
             Integer facilityPaperId, FPDocStatus docStatus) {
         if (facilityPaperId == null) {
             throw new ApiRequestException("Facility paper id is required");
@@ -275,15 +297,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
                             + " and doc status "
                             + docStatus);
         }
-        if (docs.size() > 1) {
-            throw new ApiRequestException(
-                    "Multiple FP documents for facility paper id "
-                            + facilityPaperId
-                            + " and doc status "
-                            + docStatus
-                            + "; expected exactly one");
-        }
-        return docs.get(0);
+        return docs;
     }
 
     private FPDocAuthWithDocumentDTO toAuthWithDocumentFromTemp(FPDocAuthTemp temp) {
