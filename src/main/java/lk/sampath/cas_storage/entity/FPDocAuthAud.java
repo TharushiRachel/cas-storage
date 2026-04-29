@@ -21,6 +21,9 @@ public class FPDocAuthAud extends BaseFPDocAuth {
     @Column(name = "ID")
     private Long id; // original temp/master ID
 
+    @Column(name = "FP_DOC_ID")
+    private Integer fpDocId;
+
     @Column(name = "AUD_DATE")
     private Date audDate;
 

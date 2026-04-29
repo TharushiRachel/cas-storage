@@ -2,11 +2,16 @@ package lk.sampath.cas_storage.service.impl;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.FPDocAuthAud;
 import lk.sampath.cas_storage.entity.FPDocAuthMaster;
@@ -197,6 +202,52 @@ public class FPDocumentServiceImpl implements FPDocumentService {
                         .map(this::convertMasterToDTO)
                         .collect(Collectors.toList()));
         return combined;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FPDocAuthWithDocumentDTO> getFPDocAuthTempWithFpDocument(Integer fpDocId) {
+        List<FPDocAuthTemp> rows =
+                fpDocId == null
+                        ? tempRepository.findAllWithFpDocument()
+                        : tempRepository.findByFpDocumentIdWithFetch(fpDocId);
+        return rows.stream().map(this::toAuthWithDocumentFromTemp).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FPDocAuthWithDocumentDTO> getFPDocAuthMasterWithFpDocument(Integer fpDocId) {
+        List<FPDocAuthMaster> rows =
+                fpDocId == null ? masterRepository.findAll() : masterRepository.findByFpDocId(fpDocId);
+        Set<Integer> docIds =
+                rows.stream()
+                        .map(FPDocAuthMaster::getFpDocId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+        Map<Integer, FPDocument> docById =
+                docIds.isEmpty()
+                        ? Map.of()
+                        : fpDocumentRepository.findAllById(docIds).stream()
+                                .collect(Collectors.toMap(FPDocument::getFpDocumentID, Function.identity()));
+        return rows.stream()
+                .map(
+                        m -> {
+                            FPDocAuthWithDocumentDTO out = new FPDocAuthWithDocumentDTO();
+                            out.setAuthRecord(convertMasterToDTO(m));
+                            Integer id = m.getFpDocId();
+                            FPDocument doc = id == null ? null : docById.get(id);
+                            out.setFpDocument(doc == null ? null : new FPDocumentDTO(doc));
+                            return out;
+                        })
+                .collect(Collectors.toList());
+    }
+
+    private FPDocAuthWithDocumentDTO toAuthWithDocumentFromTemp(FPDocAuthTemp temp) {
+        FPDocAuthWithDocumentDTO out = new FPDocAuthWithDocumentDTO();
+        out.setAuthRecord(convertToDTO(temp));
+        FPDocument doc = temp.getFpDocument();
+        out.setFpDocument(doc == null ? null : new FPDocumentDTO(doc));
+        return out;
     }
 
     private void insertAuditRowForUpdate(FPDocAuthTemp tempBeforeChange) {

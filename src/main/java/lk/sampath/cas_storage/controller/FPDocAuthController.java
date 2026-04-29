@@ -3,6 +3,7 @@ package lk.sampath.cas_storage.controller;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
 import lk.sampath.cas_storage.service.FPDocumentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,26 @@ public class FPDocAuthController {
         FPDocAuthCombinedListDTO combined = fpDocumentService.getAllFPDocAuthTempAndMaster();
         return new ResponseEntity<>(
                 new StandardResponse<>(true, "Fetched Successfully", combined),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/temp-with-fp-document")
+    public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(
+            @RequestParam(name = "fpDocId", required = false) Integer fpDocId) {
+        List<FPDocAuthWithDocumentDTO> list = fpDocumentService.getFPDocAuthTempWithFpDocument(fpDocId);
+        return new ResponseEntity<>(
+                new StandardResponse<>(true, "Fetched Successfully", list),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/master-with-fp-document")
+    public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getMasterWithFpDocument(
+            @RequestParam(name = "fpDocId", required = false) Integer fpDocId) {
+        List<FPDocAuthWithDocumentDTO> list = fpDocumentService.getFPDocAuthMasterWithFpDocument(fpDocId);
+        return new ResponseEntity<>(
+                new StandardResponse<>(true, "Fetched Successfully", list),
                 HttpStatus.OK
         );
     }

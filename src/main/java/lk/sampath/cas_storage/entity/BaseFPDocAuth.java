@@ -12,9 +12,6 @@ import java.util.Date;
 @MappedSuperclass
 public class BaseFPDocAuth {
 
-    @Column(name = "FP_DOC_ID")
-    private Integer fpDocId;
-
     @Column(name = "FACILITY_PAPER_ID")
     private Integer facilityPaperId;
 
