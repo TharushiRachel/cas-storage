@@ -16,6 +16,8 @@ public interface FPDocAuthTempRepository extends JpaRepository<FPDocAuthTemp, Lo
 
   @Query(
       "SELECT DISTINCT t FROM FPDocAuthTemp t JOIN FETCH t.fpDocument d WHERE d.fpDocumentID = :fpDocId")
+  List<FPDocAuthTemp> findByFpDocumentIdWithFetch(@Param("fpDocId") Integer fpDocId);
+
   @Query("SELECT t FROM FPDocAuthTemp t LEFT JOIN FETCH t.fpDocument WHERE t.id = :id")
   Optional<FPDocAuthTemp> findByIdWithFpDocument(@Param("id") Long id);
 }
