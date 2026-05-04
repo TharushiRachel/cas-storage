@@ -21,7 +21,6 @@ import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
-import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import org.springframework.http.ResponseEntity;
 
@@ -30,8 +29,8 @@ public interface DocumentService {
   ResponseEntity<StandardResponse<List<DocStorageDTO>>> getDocumentStorageList(
       List<SupportingDocIDStorageIDPairDTO> supportingDocIDStorageIDListRQList);
 
-  ResponseEntity<StandardResponse<CreateCaseResponseDTO>> createCase(CreateRequestDTO request)
-      throws ApiRequestException, IOException;
+//  ResponseEntity<StandardResponse<CreateCaseResponseDTO>> createCase(CreateRequestDTO request)
+//      throws ApiRequestException, IOException;
 
   ResponseEntity<StandardResponse<CaseDocumentsDTO>> getDasDocumentsByCaseId(String caseId)
       throws ApiRequestException;
@@ -42,16 +41,9 @@ public interface DocumentService {
   ResponseEntity<StandardResponse<DocStorageDTO>> getDocumentStorageByDocStorageID(
       Integer docStorageID) throws ApiRequestException;
 
-  CreateCaseResponseDTO processCaseCreation(CreateRequestDTO request);
+  CreateCaseResponseDTO processCaseCreation(FPDocumentDTO fpDocumentDTO);
 
   ResponseEntity<?> saveDocumentByModule(DocumentModuleDTO request) throws ApiRequestException;
 
-  ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(Integer fpDocumentId)
-      throws ApiRequestException;
-
-  ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperIdAndDocStatus(
-      Integer facilityPaperId, FPDocStatus docStatus) throws ApiRequestException;
-
-  ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId)
-      throws ApiRequestException;
+  DasDocumentDTO fetchDocumentFromIntegrationService(DasDocumentRequestDTO request) throws ApiRequestException;
 }

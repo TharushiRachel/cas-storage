@@ -1,4 +1,4 @@
-package lk.sampath.cas_storage.entity;
+package lk.sampath.cas_storage.entity.facilityPaper;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "T_FP_DOC_AUTH_AUD")
-public class FPDocAuthAud extends BaseFPDocAuth {
+public class FPDocAuthAud  extends BaseFPDocAuth {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_FP_DOC_AUTH_AUD")
@@ -19,14 +19,15 @@ public class FPDocAuthAud extends BaseFPDocAuth {
     private Long audId;
 
     @Column(name = "ID")
-    private Long id;
-
-    @Column(name = "FP_DOC_ID")
-    private Integer fpDocId;
+    private Long id; // original temp/master ID
 
     @Column(name = "AUD_DATE")
     private Date audDate;
 
     @Column(name = "AUD_ACTION")
-    private String audAction;
+    private String audAction; // e.g. "UPDATE"
+
+    @Column(name = "FP_DOC_ID")
+    private Integer fpDocId;
+
 }

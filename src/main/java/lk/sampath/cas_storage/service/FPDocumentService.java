@@ -1,40 +1,33 @@
 package lk.sampath.cas_storage.service;
 
-import java.util.List;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
+import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 public interface FPDocumentService {
 
-  ResponseEntity<StandardResponse<FPDocumentDTO>> saveFPDocument(FPDocumentDTO fpDocumentDTO)
-      throws ApiRequestException;
+    ResponseEntity<StandardResponse<FPDocumentDTO>> saveFPDocument(FPDocumentDTO fpDocumentDTO) throws ApiRequestException;
 
-  ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(Integer fpDocumentId)
-      throws ApiRequestException;
+    ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(DasDocumentRequestDTO dasDocumentRequestDTO) throws ApiRequestException;
 
-  ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperIdAndDocStatus(
-      Integer facilityPaperId, FPDocStatus docStatus) throws ApiRequestException;
+    ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId) throws ApiRequestException;
 
-  ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId)
-      throws ApiRequestException;
+    FPDocAuthDTO saveOrUpdateFPDocAuth(FPDocAuthDTO dto);
 
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO saveOrUpdateFPDocAuth(lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO dto);
+    FPDocAuthDTO getFPDocAuth(Long id);
 
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO getFPDocAuth(Long id);
+    List<FPDocAuthDTO> getAllFPDocAuth();
 
-  List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO> getAllFPDocAuth();
+    FPDocAuthCombinedListDTO getAllFPDocAuthTempAndMaster();
 
-  lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO
-      getAllFPDocAuthTempAndMaster();
+    List<FPDocAuthWithDocumentDTO> getFPDocAuthTempWithFpDocumentByFacilityPaperId(Integer facilityPaperId, FPDocStatus docStatus);
 
-  List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO>
-      getFPDocAuthTempWithFpDocumentByFacilityPaperId(
-          Integer facilityPaperId, FPDocStatus docStatus);
-
-  List<lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO>
-      getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
-          Integer facilityPaperId, FPDocStatus docStatus);
-}
+    List<FPDocAuthWithDocumentDTO> getFPDocAuthMasterWithFpDocumentByFacilityPaperId(Integer facilityPaperId, FPDocStatus docStatus);}

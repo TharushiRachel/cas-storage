@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class FPDocAuthWithDocumentDTO {
 
-  private FPDocAuthDTO authRecord;
+    private FPDocAuthDTO authRecord;
 
-  private FPDocumentDTO fpDocument;
+    private FPDocumentDTO fpDocument;
 }

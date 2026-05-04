@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,8 +11,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
@@ -391,60 +388,6 @@ public class DocumentServiceImplTest {
         ArgumentCaptor.forClass(CreateDocumentRefRequestDTO.class);
     then(integrationService).should(times(1)).createDocumentRefFromDas(captor.capture());
     assertEquals("EXISTING-CASE", captor.getValue().getCaseid());
-  }
-
-  @Test
-  void createCase_whenCreateCaseFromDasThrows_savesToDocStorageAndSkipsDocumentRef()
-      throws Exception {
-    mockTemplateReads();
-
-    CreateRequestDTO request = buildCreateRequestWithProperties(null);
-    request.setSdasfilecontent(
-        Base64.getEncoder().encodeToString("payload".getBytes(StandardCharsets.UTF_8)));
-
-    given(integrationService.createCaseFromDas(any()))
-        .willThrow(new ApiRequestException("DAS unavailable"));
-
-    DocStorage saved = new DocStorage();
-    saved.setDocStorageID(42);
-    given(docStorageRepository.save(any(DocStorage.class))).willReturn(saved);
-
-    ResponseEntity<StandardResponse<CreateCaseResponseDTO>> res = service.createCase(request);
-
-    assertEquals(HttpStatus.OK, res.getStatusCode());
-    assertNotNull(res.getBody());
-    assertNotNull(res.getBody().getResponse());
-    assertNull(res.getBody().getResponse().getDocumentRef());
-    assertEquals(42, res.getBody().getResponse().getDocStorageID());
-    assertEquals("SUCCESS", res.getBody().getResponse().getResponceFlag());
-
-    then(integrationService).should(never()).createDocumentRefFromDas(any());
-    then(docStorageRepository).should(times(1)).save(any(DocStorage.class));
-  }
-
-  @Test
-  void createCase_whenCreateCaseFromDasReturnsError_savesToDocStorage() throws Exception {
-    mockTemplateReads();
-
-    CreateRequestDTO request = buildCreateRequestWithProperties(null);
-    request.setSdasfilecontent(
-        Base64.getEncoder().encodeToString("payload".getBytes(StandardCharsets.UTF_8)));
-
-    CreateCaseResponseDTO caseRes = new CreateCaseResponseDTO();
-    caseRes.setResponceFlag("ERROR");
-    given(integrationService.createCaseFromDas(any())).willReturn(caseRes);
-
-    DocStorage saved = new DocStorage();
-    saved.setDocStorageID(99);
-    given(docStorageRepository.save(any(DocStorage.class))).willReturn(saved);
-
-    ResponseEntity<StandardResponse<CreateCaseResponseDTO>> res = service.createCase(request);
-
-    assertEquals(HttpStatus.OK, res.getStatusCode());
-    assertNull(res.getBody().getResponse().getDocumentRef());
-    assertEquals(99, res.getBody().getResponse().getDocStorageID());
-    then(integrationService).should(never()).createDocumentRefFromDas(any());
-    then(docStorageRepository).should(times(1)).save(any(DocStorage.class));
   }
 
   @Test

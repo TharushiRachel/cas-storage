@@ -20,13 +20,18 @@ import lk.sampath.cas_storage.dto.dasstorage.CreateRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import lk.sampath.cas_storage.service.DocumentService;
+import lk.sampath.cas_storage.service.FPDocumentService;
 import lk.sampath.cas_storage.util.RequestLogSanitizer;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,11 +45,14 @@ public class DocumentController {
 
   private final RequestLogSanitizer requestLogSanitizer;
 
+  private final FPDocumentService fpDocumentService;
+
   @Autowired
   public DocumentController(
-      DocumentService documentService, RequestLogSanitizer requestLogSanitizer) {
+          DocumentService documentService, RequestLogSanitizer requestLogSanitizer, FPDocumentService fpDocumentService) {
     this.documentService = documentService;
     this.requestLogSanitizer = requestLogSanitizer;
+      this.fpDocumentService = fpDocumentService;
   }
 
   @PostMapping("/getDocumentStorageList")
@@ -62,17 +70,17 @@ public class DocumentController {
     return ResponseEntity.ok().body(response.getBody());
   }
 
-  @PostMapping("/createCaseId")
-  public ResponseEntity<StandardResponse<CreateCaseResponseDTO>> createCaseId(
-      @RequestBody CreateRequestDTO request) throws ApiRequestException, IOException {
-    log.info(
-        "START | createCaseId - DocumentController | request  {}",
-        requestLogSanitizer.sanitizeCreateRequest(request));
-    ResponseEntity<StandardResponse<CreateCaseResponseDTO>> response =
-        documentService.createCase(request);
-    log.info("END | createCaseId - DocumentController | response : {}", response);
-    return ResponseEntity.ok().body(response.getBody());
-  }
+//  @PostMapping("/createCaseId")
+//  public ResponseEntity<StandardResponse<CreateCaseResponseDTO>> createCaseId(
+//      @RequestBody CreateRequestDTO request) throws ApiRequestException, IOException {
+//    log.info(
+//        "START | createCaseId - DocumentController | request  {}",
+//        requestLogSanitizer.sanitizeCreateRequest(request));
+//    ResponseEntity<StandardResponse<CreateCaseResponseDTO>> response =
+//        documentService.createCase(request);
+//    log.info("END | createCaseId - DocumentController | response : {}", response);
+//    return ResponseEntity.ok().body(response.getBody());
+//  }
 
   @GetMapping("/getDasDocumentsByCaseId/{caseId}")
   public ResponseEntity<StandardResponse<CaseDocumentsDTO>> getDasDocumentsByCaseId(
@@ -108,41 +116,6 @@ public class DocumentController {
     return ResponseEntity.ok().body(response.getBody());
   }
 
-  @GetMapping("/fpDocument/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
-  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentByFacilityPaperAndDocStatus(
-      @PathVariable Integer facilityPaperId, @PathVariable FPDocStatus docStatus)
-      throws ApiRequestException {
-    log.info(
-        "START | getFPDocumentByFacilityPaperAndDocStatus | facilityPaperId {} docStatus {}",
-        facilityPaperId,
-        docStatus);
-    ResponseEntity<StandardResponse<FPDocumentDTO>> response =
-        documentService.getFPDocumentByFacilityPaperIdAndDocStatus(facilityPaperId, docStatus);
-    log.info("END | getFPDocumentByFacilityPaperAndDocStatus | status {}", response.getStatusCode());
-    return ResponseEntity.ok().body(response.getBody());
-  }
-
-  @GetMapping("/fpDocument/{fpDocumentId}")
-  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(
-      @PathVariable Integer fpDocumentId) throws ApiRequestException {
-    log.info("START | getFPDocumentById - DocumentController | fpDocumentId {}", fpDocumentId);
-    ResponseEntity<StandardResponse<FPDocumentDTO>> response =
-        documentService.getFPDocumentById(fpDocumentId);
-    log.info("END | getFPDocumentById - DocumentController | status {}", response.getStatusCode());
-    return ResponseEntity.ok().body(response.getBody());
-  }
-
-  @GetMapping("/fpDocument/case/{caseId}")
-  public ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(
-      @PathVariable String caseId) throws ApiRequestException {
-    log.info("START | getFPDocumentsByCaseId - DocumentController | caseId {}", caseId);
-    ResponseEntity<StandardResponse<List<FPDocumentDTO>>> response =
-        documentService.getFPDocumentsByCaseId(caseId);
-    log.info(
-        "END | getFPDocumentsByCaseId - DocumentController | status {}", response.getStatusCode());
-    return ResponseEntity.ok().body(response.getBody());
-  }
-
   @PostMapping("/saveDocument")
   public ResponseEntity<StandardResponse<?>> saveDocument(@RequestBody DocumentModuleDTO request) throws ApiRequestException {
     log.info("START | saveDocument - DocumentController | request  {}", request);
@@ -155,5 +128,85 @@ public class DocumentController {
       // Optionally handle error or wrap in a StandardResponse
       return ResponseEntity.status(response.getStatusCode()).body(null);
     }
+  }
+
+  @PostMapping("/getFPDocumentById")
+  public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(@RequestBody DasDocumentRequestDTO request) throws ApiRequestException {
+    log.info("START | getFPDocumentById - DocumentController | request  {}", request);
+    ResponseEntity<StandardResponse<FPDocumentDTO>> response = fpDocumentService.getFPDocumentById(request);
+    log.info("END | getFPDocumentById - DocumentController | response : {}", response);
+    return ResponseEntity.ok().body(response.getBody());
+  }
+
+  @PostMapping("/saveOrUpdateFPDocAuth")
+  public ResponseEntity<StandardResponse<FPDocAuthDTO>> saveOrUpdate(@RequestBody FPDocAuthDTO dto) throws ApiRequestException {
+    log.info("START | saveOrUpdateFPDocAuth - DocumentController | request  {}", dto);
+    FPDocAuthDTO savedDto = fpDocumentService.saveOrUpdateFPDocAuth(dto);
+    log.info("END | saveOrUpdateFPDocAuth - DocumentController | response : {}", savedDto);
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Saved/Updated Successfully", savedDto),
+            HttpStatus.OK
+    );
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<StandardResponse<FPDocAuthDTO>> getById(@PathVariable("id") Long id) {
+    log.info("START | getById - DocumentController | id  {}", id);
+    FPDocAuthDTO dto = fpDocumentService.getFPDocAuth(id);
+    log.info("END | getById - DocumentController | response : {}", dto);
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Fetched Successfully", dto),
+            HttpStatus.OK
+    );
+  }
+
+  @GetMapping
+  public ResponseEntity<StandardResponse<List<FPDocAuthDTO>>> getAll() {
+    log.info("START | getAll - DocumentController");
+    List<FPDocAuthDTO> dtoList = fpDocumentService.getAllFPDocAuth();
+    log.info("END | getAll - DocumentController | response : {}", dtoList);
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Fetched Successfully", dtoList),
+            HttpStatus.OK
+    );
+  }
+
+  @GetMapping("/combined")
+  public ResponseEntity<StandardResponse<FPDocAuthCombinedListDTO>> getTempAndMaster() {
+    log.info("START | getTempAndMaster - DocumentController");
+    FPDocAuthCombinedListDTO combined = fpDocumentService.getAllFPDocAuthTempAndMaster();
+    log.info("END | getTempAndMaster - DocumentController | response : {}", combined);
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Fetched Successfully", combined),
+            HttpStatus.OK
+    );
+  }
+
+  @GetMapping("/temp-with-fp-document/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
+  public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(
+          @PathVariable("facilityPaperId") Integer facilityPaperId,
+          @PathVariable("docStatus") FPDocStatus docStatus) {
+    List<FPDocAuthWithDocumentDTO> dto =
+            fpDocumentService.getFPDocAuthTempWithFpDocumentByFacilityPaperId(
+                    facilityPaperId, docStatus);
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Fetched Successfully", dto),
+            HttpStatus.OK
+    );
+  }
+
+  @GetMapping("/master-with-fp-document/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
+  public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getMasterWithFpDocument(
+          @PathVariable("facilityPaperId") Integer facilityPaperId,
+          @PathVariable("docStatus") FPDocStatus docStatus) {
+    log.info("START | getMasterWithFpDocument - DocumentController | facilityPaperId  {} | docStatus {}", facilityPaperId, docStatus);
+    List<FPDocAuthWithDocumentDTO> dto =
+            fpDocumentService.getFPDocAuthMasterWithFpDocumentByFacilityPaperId(
+                    facilityPaperId, docStatus);
+    log.info("END | getMasterWithFpDocument - DocumentController | response : {}", dto);
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Fetched Successfully", dto),
+            HttpStatus.OK
+    );
   }
 }

@@ -1,17 +1,19 @@
 package lk.sampath.cas_storage.dto.facilityPaper;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lk.sampath.cas_storage.dto.dasstorage.CreateRequestDTO;
-import lk.sampath.cas_storage.entity.FPDocument;
+import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
+import lk.sampath.cas_storage.entity.facilityPaper.FPDocument;
 import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.enums.Status;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class FPDocumentDTO {
 
     private Integer fpDocumentID;
@@ -19,6 +21,8 @@ public class FPDocumentDTO {
     private Integer facilityPaperID;
 
     private Integer supportingDocID;
+
+    private String documentName;
 
     private String description;
 
@@ -28,13 +32,9 @@ public class FPDocumentDTO {
 
     private Status status;
 
-    private FPDocStatus docStatus;
-
     private String caseId;
 
     private String documentReference;
-
-    private Integer docStorageID;
 
     private Date createdDate;
 
@@ -44,23 +44,32 @@ public class FPDocumentDTO {
 
     private String modifiedBy;
 
+    private Integer docStorageID;
+
+    private FPDocStatus docStatus;
+
     private CreateRequestDTO createRequestDTO;
 
-    public FPDocumentDTO(FPDocument fpDocument){
+    private DasDocumentDTO dasDocumentDTO;
+
+    private String fpRefNumber;
+
+    public FPDocumentDTO(FPDocument fpDocument) {
         this.fpDocumentID = fpDocument.getFpDocumentID();
         this.facilityPaperID = fpDocument.getFacilityPaperID();
-        this.supportingDocID = fpDocument.getSupportingDocID();
+        this.supportingDocID = fpDocument.getSupportingDoc() != null ? fpDocument.getSupportingDoc().getSupportingDocID() : null;
+        this.documentName = fpDocument.getSupportingDoc() != null ? fpDocument.getSupportingDoc().getDocumentName() : null;
         this.description = fpDocument.getDescription();
         this.uploadedUserDisplayName = fpDocument.getUploadedUserDisplayName();
         this.uploadedDivCode = fpDocument.getUploadedDivCode();
         this.status = fpDocument.getStatus();
-        this.docStatus = fpDocument.getDocStatus();
         this.caseId = fpDocument.getCaseId();
         this.documentReference = fpDocument.getDocumentReference();
-        this.docStorageID = fpDocument.getDocStorageID();
         this.createdDate = fpDocument.getCreatedDate();
         this.createdBy = fpDocument.getCreatedBy();
         this.modifiedDate = fpDocument.getModifiedDate();
         this.modifiedBy = fpDocument.getModifiedBy();
+        this.docStorageID = fpDocument.getDocStorage() != null ? fpDocument.getDocStorage().getDocStorageID() : null;
+        this.docStatus = fpDocument.getDocStatus();
     }
 }

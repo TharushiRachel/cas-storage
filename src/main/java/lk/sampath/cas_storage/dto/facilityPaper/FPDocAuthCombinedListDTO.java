@@ -1,12 +1,13 @@
 package lk.sampath.cas_storage.dto.facilityPaper;
 
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class FPDocAuthCombinedListDTO {
 
-  private List<FPDocAuthDTO> tempRecords;
+    private List<FPDocAuthDTO> tempRecords;
 
-  private List<FPDocAuthDTO> masterRecords;
+    private List<FPDocAuthDTO> masterRecords;
 }

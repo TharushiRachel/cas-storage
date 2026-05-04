@@ -1,6 +1,6 @@
-package lk.sampath.cas_storage.repository;
+package lk.sampath.cas_storage.repository.facilityPaper;
 
-import lk.sampath.cas_storage.entity.FPDocAuthAud;
+import lk.sampath.cas_storage.entity.facilityPaper.FPDocAuthAud;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

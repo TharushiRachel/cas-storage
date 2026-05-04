@@ -14,6 +14,7 @@ import lombok.Data;
 @Data
 public class DasDocumentRequestDTO {
 
+  private Integer fpDocumentID;
   private String caseId;
   private String documentId;
 }

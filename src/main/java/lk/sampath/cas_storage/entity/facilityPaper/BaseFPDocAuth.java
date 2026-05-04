@@ -1,10 +1,10 @@
-package lk.sampath.cas_storage.entity;
+package lk.sampath.cas_storage.entity.facilityPaper;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.MappedSuperclass;
-import java.util.Date;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Date;
 
 @Getter
 @Setter

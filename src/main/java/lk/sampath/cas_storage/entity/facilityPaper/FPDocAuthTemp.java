@@ -1,4 +1,4 @@
-package lk.sampath.cas_storage.entity;
+package lk.sampath.cas_storage.entity.facilityPaper;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,10 +12,7 @@ public class FPDocAuthTemp extends BaseFPDocAuth {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_FP_DOC_AUTH_TEMP")
-    @SequenceGenerator(
-            name = "SEQ_FP_DOC_AUTH_TEMP",
-            sequenceName = "SEQ_FP_DOC_AUTH_TEMP",
-            allocationSize = 1)
+    @SequenceGenerator(name = "SEQ_FP_DOC_AUTH_TEMP", sequenceName = "SEQ_FP_DOC_AUTH_TEMP", allocationSize = 1)
     @Column(name = "ID")
     private Long id;
 

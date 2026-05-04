@@ -1,6 +1,8 @@
-package lk.sampath.cas_storage.entity;
+package lk.sampath.cas_storage.entity.facilityPaper;
 
 import jakarta.persistence.*;
+import lk.sampath.cas_storage.entity.DocStorage;
+import lk.sampath.cas_storage.entity.SupportingDoc;
 import lk.sampath.cas_storage.entity.common.UserTrackableEntity;
 import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.enums.Status;
@@ -22,8 +24,9 @@ public class FPDocument extends UserTrackableEntity {
     @Column(name = "FACILITY_PAPER_ID")
     private Integer facilityPaperID;
 
-    @Column(name = "SUPPORT_DOC_ID")
-    private Integer supportingDocID;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SUPPORT_DOC_ID")
+    private SupportingDoc supportingDoc;
 
     @Column(name = "DESCRIPTION")
     private String description;
@@ -38,9 +41,9 @@ public class FPDocument extends UserTrackableEntity {
     @Column(name = "STATUS")
     private Status status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "DOC_STATUS")
-    private FPDocStatus docStatus;
+    @ManyToOne
+    @JoinColumn(name = "DOCUMENT_STORAGE_ID")
+    private DocStorage docStorage;
 
     @Column(name = "CASE_ID")
     private String caseId;
@@ -48,6 +51,7 @@ public class FPDocument extends UserTrackableEntity {
     @Column(name = "DOCUMENT_REFERENCE")
     private String documentReference;
 
-    @Column(name = "DOCUMENT_STORAGE_ID")
-    private Integer docStorageID;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "DOC_STATUS")
+    private FPDocStatus docStatus;
 }
