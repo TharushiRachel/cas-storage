@@ -12,6 +12,7 @@ import { FpPostApprovalAttachementUploadComponent } from './fp-post-approval-att
 import { SETTINGS } from 'src/app/core/setting/commons.settings';
 import { ApplicationService } from 'src/app/core/service/application/application.service';
 import { Constants } from 'src/app/core/setting/constants';
+import { FacilityPaperAddEditService } from 'src/app/views/pages/facility-paper/services/facility-paper-add-edit.service';
 import { FPDocService } from 'src/app/services/fp-doc.service';
 import {
   FPDocAuthWithDocumentDTO,
@@ -40,6 +41,7 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
   constructor(
     private mdbModalService: MDBModalService,
     private applicationService: ApplicationService,
+    private facilityPaperAddEditService: FacilityPaperAddEditService,
     private fpDocService: FPDocService,
   ) { }
 
@@ -60,26 +62,21 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
       return;
     }
     this.loadingList = true;
-    this.fpDocService.getTempWithFpDocument(id, 'POST').subscribe({
-      next: (res: StandardResponse<FPDocAuthWithDocumentDTO[]>) => {
+    /** BFF body for STORAGE_SETTINGS.ENDPOINTS.getTempWithFpDocument — align with your gateway DTO */
+    const payload = {
+      facilityPaperId: id,
+      docStatus: 'POST',
+    };
+    void this.facilityPaperAddEditService
+      .getTempWithFpDocument(payload as any)
+      .then((data: FPDocAuthWithDocumentDTO[] | null) => {
         this.loadingList = false;
-        this.fpAuthWithDocuments = this.unwrapListResponse(res);
-      },
-      error: () => {
+        this.fpAuthWithDocuments = Array.isArray(data) ? data : [];
+      })
+      .catch(() => {
         this.loadingList = false;
         this.fpAuthWithDocuments = [];
-      },
-    });
-  }
-
-  private unwrapListResponse(
-    res: StandardResponse<FPDocAuthWithDocumentDTO[]>
-  ): FPDocAuthWithDocumentDTO[] {
-    const raw = (res as any)?.response ?? (res as any)?.data;
-    if (Array.isArray(raw)) {
-      return raw;
-    }
-    return [];
+      });
   }
 
   openModalAttachmentUpload(facilityPaper: unknown) {
