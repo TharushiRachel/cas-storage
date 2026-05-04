@@ -31,6 +31,20 @@ export interface FPDocAuthCombinedListDTO {
   masterRecords: FPDocAuthDTO[];
 }
 
+export interface CreateRequestDTO {
+  createdUserId?: string;
+  createdUserLevel?: string;
+  createdUserSol?: string;
+  caseComment?: string;
+  Property?: any[]; // You can map CreateCasePropertyDTO later if needed
+  senderid?: string;
+  sdasdocumentname?: string;
+  caseid?: string;
+  sdasdocumenttype?: string;
+  uploaduserSecuritylevel?: string;
+  sdasfilecontent?: string;
+}
+
 export interface FPDocumentDTO {
   fpDocumentID?: number;
   facilityPaperID?: number;
@@ -45,6 +59,7 @@ export interface FPDocumentDTO {
   caseId?: string;
   documentReference?: string;
   docStorageID?: string;
+  createRequestDTO?: CreateRequestDTO;
 }
 
 export interface FPDocAuthWithDocumentDTO {

@@ -110,6 +110,21 @@ export class FpDocFormComponent implements OnInit {
     this.submitting = true;
     this.errorMessage = '';
     
+    // Create CreateRequestDTO based on the backend structure
+    const createRequest = {
+      createdUserId: this.docForm.get('addedBy')?.value || 'System',
+      createdUserLevel: 'USER',
+      createdUserSol: '001',
+      caseComment: 'Document generated from Auth form',
+      Property: [],
+      senderid: this.docForm.get('addedBy')?.value || 'System',
+      sdasdocumentname: 'FP_Auth_Document',
+      // caseid: '', // Leave empty to create a new case, or set if known
+      sdasdocumenttype: 'PDF',
+      uploaduserSecuritylevel: '1',
+      sdasfilecontent: 'base64_encoded_content_here' // Ideally this should be a real file's base64 string
+    };
+
     // Create payload based on FPDocumentDTO structure
     const payload = {
       facilityPaperID: this.docForm.get('facilityPaperId')?.value,
@@ -117,8 +132,8 @@ export class FpDocFormComponent implements OnInit {
       uploadedUserDisplayName: this.docForm.get('addedBy')?.value || 'System',
       status: 'ACTIVE',
       docStatus: 'TEMP', // or MASTER depending on business logic
-      createdBy: this.docForm.get('addedBy')?.value || 'System'
-      // other fields can be added here
+      createdBy: this.docForm.get('addedBy')?.value || 'System',
+      createRequestDTO: createRequest
     };
 
     const documentModuleDto = {
