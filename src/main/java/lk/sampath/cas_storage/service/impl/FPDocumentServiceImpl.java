@@ -230,8 +230,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             Integer facilityPaperId, FPDocStatus docStatus) {
         List<FPDocument> fpDocs = resolveFpDocumentsForFacilityPaper(facilityPaperId, docStatus);
         List<FPDocAuthWithDocumentDTO> results = fpDocs.stream()
-                .map(fpDoc -> tempRepository.findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID()).orElse(null))
-                .filter(java.util.Objects::nonNull)
+                .flatMap(fpDoc -> tempRepository.findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID()).stream())
                 .map(this::toAuthWithDocumentFromTemp)
                 .collect(Collectors.toList());
 
@@ -251,8 +250,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             Integer facilityPaperId, FPDocStatus docStatus) {
         List<FPDocument> fpDocs = resolveFpDocumentsForFacilityPaper(facilityPaperId, docStatus);
         List<FPDocAuthWithDocumentDTO> results = fpDocs.stream()
-                .map(fpDoc -> masterRepository.findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID()).orElse(null))
-                .filter(java.util.Objects::nonNull)
+                .flatMap(fpDoc -> masterRepository.findByFpDocumentIdWithFetch(fpDoc.getFpDocumentID()).stream())
                 .map(this::toAuthWithDocumentFromMaster)
                 .collect(Collectors.toList());
 

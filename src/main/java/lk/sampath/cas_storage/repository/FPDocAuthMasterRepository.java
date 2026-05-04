@@ -16,7 +16,7 @@ public interface FPDocAuthMasterRepository extends JpaRepository<FPDocAuthMaster
 
     @Query(
             "SELECT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument d WHERE d.fpDocumentID = :fpDocId")
-    Optional<FPDocAuthMaster> findByFpDocumentIdWithFetch(@Param("fpDocId") Integer fpDocId);
+    List<FPDocAuthMaster> findByFpDocumentIdWithFetch(@Param("fpDocId") Integer fpDocId);
 
     @Query("SELECT m FROM FPDocAuthMaster m LEFT JOIN FETCH m.fpDocument WHERE m.id = :id")
     Optional<FPDocAuthMaster> findByIdWithFpDocument(@Param("id") Long id);
