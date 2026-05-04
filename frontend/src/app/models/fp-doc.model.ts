@@ -46,9 +46,11 @@ export interface CreateRequestDTO {
 }
 
 export interface FPDocumentDTO {
-  fpDocumentID?: number;
+  fpDocumentID?: number | null;
   facilityPaperID?: number;
+  fpRefNumber?: string;
   supportingDocID?: number;
+  documentName?: string;
   description?: string;
   uploadedUserDisplayName?: string;
   uploadedDivCode?: string;
@@ -67,9 +69,19 @@ export interface FPDocAuthWithDocumentDTO {
   fpDocument: FPDocumentDTO;
 }
 
-export interface DocumentModuleDTO {
+/** Backend `DocumentModuleDTO`; use {@link asFpDocumentSaveRequest} for FP saves */
+export interface DocumentModuleDTO<T = unknown> {
   moduleType: string;
-  payload: any;
+  payload: T;
+}
+
+export const FP_DOCUMENT_MODULE = 'FP' as const;
+
+/** Typed wrapper for `POST .../saveDocument` when `moduleType` is FP */
+export function asFpDocumentSaveRequest(
+  payload: FPDocumentDTO
+): DocumentModuleDTO<FPDocumentDTO> {
+  return { moduleType: FP_DOCUMENT_MODULE, payload };
 }
 
 export interface StandardResponse<T> {

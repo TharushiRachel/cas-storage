@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { 
-  FPDocAuthDTO, 
-  FPDocAuthCombinedListDTO, 
-  StandardResponse, 
+import {
+  FPDocAuthDTO,
+  FPDocAuthCombinedListDTO,
+  StandardResponse,
   FPDocAuthWithDocumentDTO,
-  DocumentModuleDTO
+  DocumentModuleDTO,
+  FPDocumentDTO,
 } from '../models/fp-doc.model';
 
 @Injectable({
@@ -20,7 +21,9 @@ export class FPDocService {
 
   constructor(private http: HttpClient) { }
 
-  saveDocument(data: DocumentModuleDTO): Observable<StandardResponse<any>> {
+  saveDocument(
+    data: DocumentModuleDTO<FPDocumentDTO>
+  ): Observable<StandardResponse<any>> {
     return this.http.post<StandardResponse<any>>(`${this.docApiUrl}/saveDocument`, data);
   }
 

@@ -13,6 +13,11 @@ import { FileUploadError } from 'src/app/shared/dto/file-upload-error';
 import { FileValidator } from 'src/app/shared/validators/file.validator';
 import { FacilityPaperAddEditService } from 'src/app/views/pages/facility-paper/services/facility-paper-add-edit.service';
 import { FPDocService } from 'src/app/services/fp-doc.service';
+import {
+  asFpDocumentSaveRequest,
+  CreateRequestDTO,
+  FPDocumentDTO,
+} from 'src/app/models/fp-doc.model';
 
 @Component({
   selector: 'app-fp-post-approval-attachement-upload',
@@ -85,7 +90,10 @@ heading: string;
   }
 
   addFacilityDocument() {
-    let doc = AppUtils.getSupportingDocFromDocumentName(this.supportingDocs, this.componentForm.value.supportingDocID);
+    const doc = AppUtils.getSupportingDocFromDocumentName(
+      this.supportingDocs,
+      this.componentForm.value.supportingDocID
+    );
 
     if (this.fileUploadError.hasError) {
       this.alertService.showToaster(this.fileUploadError.errorMessage, SETTINGS.TOASTER_MESSAGES.error);
@@ -94,46 +102,10 @@ heading: string;
 
     const reader = new FileReader();
     reader.onload = () => {
-      // Remove the prefix "data:...;base64," if present
-      const base64String = (reader.result as string).split(',')[1];
-
-      const userId = String(this.applicationService.getLoggedInUserUserID());
-
-      const payload = {
-        fpDocumentID: null,
-        facilityPaperID: this.content.facilityPaper.facilityPaperID,
-        fpRefNumber: this.content.facilityPaper.fpRefNumber,
-        supportingDocID: doc.supportingDocID,
-        description: this.componentForm.value.remark,
-        uploadedUserDisplayName: this.applicationService.getLoggedInUserDisplayName(),
-        uploadedDivCode: this.applicationService.getLoggedInUserDivCode(),
-        status: 'ACT',
-        docStatus: 'POST',
-        caseId: this.content.facilityPaper.caseId || '',
-        documentReference: '',
-        createdDate: new Date().toISOString(),
-        createdBy: this.applicationService.getLoggedInUserUserName(),
-        modifiedDate: new Date().toISOString(),
-        modifiedBy: this.applicationService.getLoggedInUserUserName(),
-        createRequestDTO: {
-          caseid: this.content.facilityPaper.caseId || '',
-          createdUserId: userId,
-          createdUserLevel: this.applicationService.getLoggedInUserUPMGroupCode(),
-          createdUserSol: this.applicationService.getLoggedInUserDivCode(),
-          caseComment: this.componentForm.value.remark,
-          senderid: userId,
-          sdasdocumentname: (this.fileToUpload && this.fileToUpload.name) ? this.fileToUpload.name : doc.documentName,
-          sdasdocumenttype: this.componentForm.value.remark,
-          uploaduserSecuritylevel: this.applicationService.getLoggedInUserUPMGroupCode(),
-          sdasfilecontent: base64String
-        }
-      };
-
-      const dataToSend = {
-        moduleType: 'FP',
-        payload
-      };
-
+      const base64String = (reader.result as string).split(',')[1] ?? '';
+      const dataToSend = asFpDocumentSaveRequest(
+        this.buildPostApprovalFPDocumentPayload(doc, base64String)
+      );
       this.fpDocService.saveDocument(dataToSend).subscribe({
         next: (res: any) => {
           const ok = res?.success === true || res?.status === true;
@@ -147,9 +119,55 @@ heading: string;
         error: (err: any) => {
           const msg = err?.error?.message ?? err?.message ?? 'Unable to save document';
           this.alertService.showToaster(msg, SETTINGS.TOASTER_MESSAGES.error);
-        }
+        },
       });
     };
     reader.readAsDataURL(this.fileToUpload);
+  }
+
+  private buildPostApprovalFPDocumentPayload(
+    supportingDoc: { supportingDocID: number; documentName: string },
+    fileBase64: string
+  ): FPDocumentDTO {
+    const fp = this.content.facilityPaper;
+    const remark = this.componentForm.value.remark as string;
+    const caseId = fp.caseId ?? '';
+    const userId = String(this.applicationService.getLoggedInUserUserID());
+    const userLevel = this.applicationService.getLoggedInUserUPMGroupCode();
+    const div = this.applicationService.getLoggedInUserDivCode();
+    const userName = this.applicationService.getLoggedInUserUserName();
+    const now = new Date().toISOString();
+
+    const createRequestDTO: CreateRequestDTO = {
+      caseid: caseId,
+      createdUserId: userId,
+      createdUserLevel: userLevel,
+      createdUserSol: div,
+      caseComment: remark,
+      senderid: userId,
+      sdasdocumentname: this.fileToUpload?.name ?? supportingDoc.documentName,
+      sdasdocumenttype: remark,
+      uploaduserSecuritylevel: userLevel,
+      sdasfilecontent: fileBase64,
+    };
+
+    return {
+      fpDocumentID: null,
+      facilityPaperID: fp.facilityPaperID,
+      fpRefNumber: fp.fpRefNumber,
+      supportingDocID: supportingDoc.supportingDocID,
+      description: remark,
+      uploadedUserDisplayName: this.applicationService.getLoggedInUserDisplayName(),
+      uploadedDivCode: div,
+      status: 'ACT',
+      docStatus: 'POST',
+      caseId,
+      documentReference: '',
+      createdDate: now,
+      createdBy: userName,
+      modifiedDate: now,
+      modifiedBy: userName,
+      createRequestDTO,
+    };
   }
 }
