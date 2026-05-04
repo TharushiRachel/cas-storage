@@ -186,7 +186,7 @@ public class DocumentServiceImpl implements DocumentService {
 //        createCaseDTO.setUserLevel(request.getUserLevel());
 //        createCaseDTO.setCreatedUserSol(request.getCreatedUserSol());
 //        createCaseDTO.setCaseComment(request.getCaseComment());
-//        createCaseDTO.setProperty(new ArrayList<>());
+//        createCaseDTO.setDasCaseProperties(new ArrayList<>());
 //        createCaseDTO.setCreatedUserId(request.getSenderid());
 //
 //        log.info("Request to the integration service : {}", createCaseDTO);
@@ -300,7 +300,7 @@ public class DocumentServiceImpl implements DocumentService {
       properties.add(new CreateCasePropertyDTO("casReference", fpDocumentDTO.getFpRefNumber()));
       properties.add(new CreateCasePropertyDTO("type", "FP"));
 
-      createCaseDTO.setProperty(properties);
+      createCaseDTO.setDasCaseProperties(properties);
 
       log.info("Request to the integration service : {}", createCaseDTO);
 
