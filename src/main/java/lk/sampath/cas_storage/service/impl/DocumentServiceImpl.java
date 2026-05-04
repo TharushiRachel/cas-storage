@@ -297,7 +297,12 @@ public class DocumentServiceImpl implements DocumentService {
       createCaseDTO.setUserLevel(request.getUserLevel());
       createCaseDTO.setCreatedUserSol(request.getCreatedUserSol());
       createCaseDTO.setCaseComment(request.getCaseComment());
-      createCaseDTO.setProperty(new ArrayList<>());
+      
+      if (request.getProperty() != null && !request.getProperty().isEmpty()) {
+        createCaseDTO.setProperty(request.getProperty());
+      } else {
+        createCaseDTO.setProperty(new ArrayList<>());
+      }
 
       createCaseDTO.setCreatedUserId(request.getSenderid());
 
