@@ -1,0 +1,54 @@
+<div class="modal-header modal-topic">
+  <h4 class="modal-title w-100 font-weight-bold">Post Approval Attachment Upload</h4>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="mdbModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<div class="modal-body mx-3 modal-detail form-margin">
+  <form class="d-flex flex-column justify-content-start align-items-start w-100-p" [formGroup]="componentForm">
+
+    <div class="md-form m-top-10px m-bottom-10px w-100-p">
+      <input mdbValidate type="text"
+             id="supportingDocID"
+             maxlength="200"
+             formControlName="supportingDocID"
+             class="form-control"
+             placeholder="Choose Supporting Document"
+             [mdbAutoCompleter]="auto"
+             mdbInput>
+
+      <mdb-auto-completer #auto="mdbAutoCompleter" textNoResults="I have found no results :(">
+        <ng-container *ngFor="let option of result | async">
+          <mdb-option [value]="option.documentName">
+            {{ option.documentName}}
+          </mdb-option>
+        </ng-container>
+      </mdb-auto-completer>
+      <label for="supportingDocID">Document</label>
+      <mdb-error *ngIf="formErrors.supportingDocID.required">Supporting Doc required</mdb-error>
+    </div>
+
+    <div class="md-form m-top-10px m-bottom-10px w-100-p">
+      <input mdbValidate type="text" id="remark" maxlength="200" formControlName="remark" class="form-control"
+             mdbInput>
+      <label for="remark">Remark</label>
+    </div>
+
+    <div class="input-group">
+      <input type="file" class="custom-file-input" id="inputGroupFile01"
+             aria-describedby="inputGroupFileAddon01"
+             (change)="selectFile($event)">
+      <mdb-error *ngIf="fileUploadError.hasError">{{fileUploadError.errorMessage}}</mdb-error>
+      <label class="custom-file-label" for="inputGroupFile01">
+        {{fileToUpload ? fileToUpload.name : 'Choose file'}}
+      </label>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer modal-end">
+  <button type="button" mdbBtn color="secondary" class="relative waves-light" mdbWavesEffect size="sm"
+          [disabled]="componentForm.invalid || !isValidUpload()" (click)="addFacilityDocument()">Upload
+  </button>
+</div>
