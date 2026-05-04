@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import * as _ from 'lodash';
 import { MDBModalRef } from 'ng-uikit-pro-standard';
@@ -12,7 +12,6 @@ import { AppUtils } from 'src/app/shared/app.utils';
 import { FileUploadError } from 'src/app/shared/dto/file-upload-error';
 import { FileValidator } from 'src/app/shared/validators/file.validator';
 import { FacilityPaperAddEditService } from 'src/app/views/pages/facility-paper/services/facility-paper-add-edit.service';
-import { FPDocService } from 'src/app/services/fp-doc.service';
 import {
   asFpDocumentSaveRequest,
   CreateRequestDTO,
@@ -39,7 +38,6 @@ heading: string;
   onSupportingDocChange: Subscription = new Subscription();
   action: Subject<any> = new Subject<any>();
 
-  private readonly fpDocService = inject(FPDocService);
 
   constructor(
     private facilityPaperAddEditService: FacilityPaperAddEditService,
@@ -106,21 +104,14 @@ heading: string;
       const dataToSend = asFpDocumentSaveRequest(
         this.buildPostApprovalFPDocumentPayload(doc, base64String)
       );
-      this.fpDocService.saveDocument(dataToSend).subscribe({
-        next: (res: any) => {
-          const ok = res?.success === true || res?.status === true;
-          if (ok) {
-            this.alertService.showToaster(res.message ?? 'Document saved', SETTINGS.TOASTER_MESSAGES.success);
+      // FacilityPaperAddEditService handles toasters; resolves inner response or null
+      void this.facilityPaperAddEditService
+        .saveDocument(dataToSend as any)
+        .then((saved: unknown) => {
+          if (saved != null) {
             this.mdbModalRef.hide();
-          } else {
-            this.alertService.showToaster(res?.message ?? 'Save failed', SETTINGS.TOASTER_MESSAGES.error);
           }
-        },
-        error: (err: any) => {
-          const msg = err?.error?.message ?? err?.message ?? 'Unable to save document';
-          this.alertService.showToaster(msg, SETTINGS.TOASTER_MESSAGES.error);
-        },
-      });
+        });
     };
     reader.readAsDataURL(this.fileToUpload);
   }
