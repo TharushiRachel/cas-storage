@@ -52,6 +52,11 @@ export interface FPDocAuthWithDocumentDTO {
   fpDocument: FPDocumentDTO;
 }
 
+export interface DocumentModuleDTO {
+  moduleType: string;
+  payload: any;
+}
+
 export interface StandardResponse<T> {
   status: boolean;
   message: string;

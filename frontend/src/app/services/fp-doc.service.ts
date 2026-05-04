@@ -6,7 +6,8 @@ import {
   FPDocAuthDTO, 
   FPDocAuthCombinedListDTO, 
   StandardResponse, 
-  FPDocAuthWithDocumentDTO 
+  FPDocAuthWithDocumentDTO,
+  DocumentModuleDTO
 } from '../models/fp-doc.model';
 
 @Injectable({
@@ -14,8 +15,14 @@ import {
 })
 export class FPDocService {
   private apiUrl = `${environment.apiUrl}/fp-doc-auth`;
+  // DocumentController uses /api mappings. If environment.apiUrl is /api/v1, we need to adjust
+  private docApiUrl = environment.apiUrl.replace('/v1', '');
 
   constructor(private http: HttpClient) { }
+
+  saveDocument(data: DocumentModuleDTO): Observable<StandardResponse<any>> {
+    return this.http.post<StandardResponse<any>>(`${this.docApiUrl}/saveDocument`, data);
+  }
 
   saveOrUpdate(data: FPDocAuthDTO): Observable<StandardResponse<FPDocAuthDTO>> {
     return this.http.post<StandardResponse<FPDocAuthDTO>>(this.apiUrl, data);

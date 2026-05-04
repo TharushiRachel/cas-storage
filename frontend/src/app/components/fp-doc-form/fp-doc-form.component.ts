@@ -75,9 +75,7 @@ export class FpDocFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.docForm.invalid) {
-      Object.keys(this.docForm.controls).forEach(key => {
-        this.docForm.get(key)?.markAsTouched();
-      });
+      this.markFormTouched();
       return;
     }
 
@@ -99,6 +97,56 @@ export class FpDocFormComponent implements OnInit {
         console.error('Error saving data', err);
         this.errorMessage = 'An error occurred while saving data';
       }
+    });
+  }
+
+  onSaveDocument(): void {
+    if (this.docForm.get('facilityPaperId')?.invalid) {
+      this.docForm.get('facilityPaperId')?.markAsTouched();
+      this.errorMessage = 'Facility Paper ID is required to save a document';
+      return;
+    }
+
+    this.submitting = true;
+    this.errorMessage = '';
+    
+    // Create payload based on FPDocumentDTO structure
+    const payload = {
+      facilityPaperID: this.docForm.get('facilityPaperId')?.value,
+      description: 'Document generated from Auth form',
+      uploadedUserDisplayName: this.docForm.get('addedBy')?.value || 'System',
+      status: 'ACTIVE',
+      docStatus: 'TEMP', // or MASTER depending on business logic
+      createdBy: this.docForm.get('addedBy')?.value || 'System'
+      // other fields can be added here
+    };
+
+    const documentModuleDto = {
+      moduleType: 'FP',
+      payload: payload
+    };
+
+    this.fpDocService.saveDocument(documentModuleDto).subscribe({
+      next: (res) => {
+        this.submitting = false;
+        if (res.status) {
+          alert('Document saved successfully!');
+          // Optionally navigate or reset form
+        } else {
+          this.errorMessage = res.message || 'Failed to save document';
+        }
+      },
+      error: (err) => {
+        this.submitting = false;
+        console.error('Error saving document', err);
+        this.errorMessage = 'An error occurred while saving the document';
+      }
+    });
+  }
+
+  private markFormTouched(): void {
+    Object.keys(this.docForm.controls).forEach(key => {
+      this.docForm.get(key)?.markAsTouched();
     });
   }
 }
