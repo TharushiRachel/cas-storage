@@ -29,12 +29,15 @@
       </tr>
       </thead>
       <tbody>
-      <!-- <ng-container *ngFor="let item of fpDocumentDTOList">
+      <tr *ngIf="loadingList">
+        <td colspan="5" class="text-center text-muted">Loading…</td>
+      </tr>
+      <ng-container *ngFor="let item of fpAuthWithDocuments">
         <tr class="">
-          <td>{{item.documentName}}</td>
-          <td>{{item.uploadedUserDisplayName}}</td>
-          <td class="text-align-center">{{item.createdDateStr}}</td>
-          <td>{{item.description}}</td>
+          <td>{{ item.fpDocument?.documentName }}</td>
+          <td>{{ item.fpDocument?.uploadedUserDisplayName }}</td>
+          <td class="text-align-center">{{ item.fpDocument?.createdDate | date:'medium' }}</td>
+          <td>{{ item.fpDocument?.description }}</td>
           <td class="text-align-center width-15">
             <div>
               <ng-container *ngIf="isCheckedPdf(item)">
@@ -65,7 +68,7 @@
             </div>
           </td>
         </tr>
-      </ng-container> -->
+      </ng-container>
       </tbody>
     </table>
   </div>

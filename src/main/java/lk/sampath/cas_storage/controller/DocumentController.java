@@ -182,13 +182,11 @@ public class DocumentController {
     );
   }
 
-  @GetMapping("/temp-with-fp-document/facility-paper/{facilityPaperId}/doc-status/{docStatus}")
-  public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(
-          @PathVariable("facilityPaperId") Integer facilityPaperId,
-          @PathVariable("docStatus") FPDocStatus docStatus) {
+  @PostMapping("/temp-with-fp-document")
+  public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(@RequestBody FpDocListDTO request) {
     List<FPDocAuthWithDocumentDTO> dto =
             fpDocumentService.getFPDocAuthTempWithFpDocumentByFacilityPaperId(
-                    facilityPaperId, docStatus);
+                    request.getFacilityPaperId(), request.getDocStatus());
     return new ResponseEntity<>(
             new StandardResponse<>(true, "Fetched Successfully", dto),
             HttpStatus.OK

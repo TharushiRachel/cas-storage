@@ -45,6 +45,18 @@ export interface CreateRequestDTO {
   sdasfilecontent?: string;
 }
 
+export interface DasDocumentRequestDTO {
+  fpDocumentID?: number;
+  caseId?: string;
+  documentId?: string;
+}
+
+export interface DasDocumentDTO {
+  contentType?: string;
+  base64Str?: string;
+  base64StrOrig?: string;
+}
+
 export interface FPDocumentDTO {
   fpDocumentID?: number | null;
   facilityPaperID?: number;
@@ -62,6 +74,7 @@ export interface FPDocumentDTO {
   documentReference?: string;
   docStorageID?: string;
   createRequestDTO?: CreateRequestDTO;
+  dasDocumentDTO?: DasDocumentDTO;
 }
 
 export interface FPDocAuthWithDocumentDTO {
@@ -85,7 +98,12 @@ export function asFpDocumentSaveRequest(
 }
 
 export interface StandardResponse<T> {
-  status: boolean;
-  message: string;
-  data: T;
+  /** Backend cas-storage uses `success` */
+  success?: boolean;
+  /** Alternative flag used by some clients */
+  status?: boolean;
+  message?: string;
+  /** Backend cas-storage body field */
+  response?: T;
+  data?: T;
 }

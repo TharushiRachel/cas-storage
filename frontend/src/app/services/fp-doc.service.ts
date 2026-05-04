@@ -1,14 +1,15 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  DasDocumentRequestDTO,
+  DocumentModuleDTO,
   FPDocAuthDTO,
   FPDocAuthCombinedListDTO,
-  StandardResponse,
   FPDocAuthWithDocumentDTO,
-  DocumentModuleDTO,
   FPDocumentDTO,
+  StandardResponse,
 } from '../models/fp-doc.model';
 
 @Injectable({
@@ -29,6 +30,15 @@ export class FPDocService {
 
   saveOrUpdate(data: FPDocAuthDTO): Observable<StandardResponse<FPDocAuthDTO>> {
     return this.http.post<StandardResponse<FPDocAuthDTO>>(this.apiUrl, data);
+  }
+
+  getFPDocumentById(
+    body: DasDocumentRequestDTO
+  ): Observable<StandardResponse<FPDocumentDTO>> {
+    return this.http.post<StandardResponse<FPDocumentDTO>>(
+      `${this.docApiUrl}/getFPDocumentById`,
+      body
+    );
   }
 
   getCombined(): Observable<StandardResponse<FPDocAuthCombinedListDTO>> {
