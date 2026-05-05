@@ -54,6 +54,8 @@ public class FPDocumentDTO {
 
     private String fpRefNumber;
 
+    private DocStorageDTO docStorageDTO;
+
     public FPDocumentDTO(FPDocument fpDocument) {
         this.fpDocumentID = fpDocument.getFpDocumentID();
         this.facilityPaperID = fpDocument.getFacilityPaperID();
@@ -71,5 +73,10 @@ public class FPDocumentDTO {
         this.modifiedBy = fpDocument.getModifiedBy();
         this.docStorageID = fpDocument.getDocStorage() != null ? fpDocument.getDocStorage().getDocStorageID() : null;
         this.docStatus = fpDocument.getDocStatus();
+
+        if (fpDocument.getDocStorage() != null && fpDocument.getDocStorage().getDocStorageID() != null) {
+            // Metadata only: embedding byte[] as base64 per row breaks BFF/gateway limits and yields generic client errors.
+            this.docStorageDTO = new DocStorageDTO(fpDocument.getDocStorage(), false);
+        }
     }
 }

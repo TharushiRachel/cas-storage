@@ -9,6 +9,7 @@
  */
 package lk.sampath.cas_storage.dto.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 import lk.sampath.cas_storage.entity.DocStorage;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DocStorageDTO implements Serializable {
 
   private Integer docStorageID;
@@ -26,6 +28,7 @@ public class DocStorageDTO implements Serializable {
 
   private String fileName;
 
+  /** Omitted from JSON when null — use {@link #DocStorageDTO(DocStorage, boolean)} with {@code false} for list/summary APIs. */
   private byte[] document;
 
   private String dasDocument;
@@ -34,11 +37,22 @@ public class DocStorageDTO implements Serializable {
 
   private String fileType;
 
+  /**
+   * Loads all fields including {@link #document} bytes (for dedicated download/document-storage endpoints).
+   */
   public DocStorageDTO(DocStorage docStorage) {
+    this(docStorage, true);
+  }
+
+  /**
+   * @param includeDocumentBytes when {@code false}, {@link #document} is left null so nested DTOs (e.g. in {@code FPDocumentDTO})
+   *     do not balloon JSON with base64 payloads and break gateways / BFF clients.
+   */
+  public DocStorageDTO(DocStorage docStorage, boolean includeDocumentBytes) {
     this.docStorageID = docStorage.getDocStorageID();
     this.description = docStorage.getDescription();
     this.fileName = docStorage.getFileName();
-    this.document = docStorage.getDocument();
+    this.document = includeDocumentBytes ? docStorage.getDocument() : null;
     this.lastUpdatedDateStr = docStorage.getDescription();
     this.dasDocument = docStorage.getDocumentReference();
     this.fileType = docStorage.getFileType();
