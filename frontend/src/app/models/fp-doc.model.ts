@@ -57,6 +57,16 @@ export interface DasDocumentDTO {
   base64StrOrig?: string;
 }
 
+/** Mirrors backend DocStorageDTO; binary payload is usually omitted from list APIs. */
+export interface DocStorageDTO {
+  docStorageID?: number;
+  description?: string;
+  fileName?: string;
+  fileType?: string;
+  dasDocument?: string;
+  lastUpdatedDateStr?: string;
+}
+
 export interface FPDocumentDTO {
   fpDocumentID?: number | null;
   facilityPaperID?: number;
@@ -73,6 +83,7 @@ export interface FPDocumentDTO {
   caseId?: string;
   documentReference?: string;
   docStorageID?: string;
+  docStorageDTO?: DocStorageDTO;
   createRequestDTO?: CreateRequestDTO;
   dasDocumentDTO?: DasDocumentDTO;
 }

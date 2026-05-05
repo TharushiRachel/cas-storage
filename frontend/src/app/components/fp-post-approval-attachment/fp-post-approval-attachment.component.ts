@@ -171,11 +171,40 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
     );
   }
 
+  /**
+   * True if the stored file is a PDF: prefer docStorageDTO.fileName,
+   * then documentReference, then docStorageDTO.fileType, then documentName.
+   */
   isCheckedPdf(item: FPDocAuthWithDocumentDTO): boolean {
-    const doc = item.fpDocument;
-    const raw =
-      doc && doc.documentName != null ? String(doc.documentName).toLowerCase() : '';
-    return raw.length > 0 && raw.endsWith('.pdf');
+    const doc = item && item.fpDocument;
+    if (!doc) {
+      return false;
+    }
+    const st = doc.docStorageDTO;
+    if (st && st.fileName) {
+      return this.fileNameIndicatesPdf(st.fileName);
+    }
+    if (doc.documentReference) {
+      return this.fileNameIndicatesPdf(doc.documentReference);
+    }
+    if (st && st.fileType) {
+      const ft = String(st.fileType).toLowerCase();
+      if (ft === 'pdf' || ft === 'application/pdf' || ft.endsWith('/pdf')) {
+        return true;
+      }
+    }
+    if (doc.documentName) {
+      return this.fileNameIndicatesPdf(doc.documentName);
+    }
+    return false;
+  }
+
+  private fileNameIndicatesPdf(name: string): boolean {
+    const last = name.lastIndexOf('.');
+    if (last < 0 || last >= name.length - 1) {
+      return false;
+    }
+    return name.slice(last).toLowerCase() === '.pdf';
   }
 
   isUploadedDiv(item: FPDocAuthWithDocumentDTO): boolean {
