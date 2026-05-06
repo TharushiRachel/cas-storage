@@ -54,7 +54,7 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
   fpAuthWithDocuments: FPDocAuthWithDocumentDTO[] = [];
   loadingList = false;
 
-  @ViewChild('downloadLink') downloadLink?: ElementRef<HTMLAnchorElement>;
+  @ViewChild('downloadLink', { static: false }) private downloadLink!: ElementRef;
 
   constructor(
     private mdbModalService: MDBModalService,
@@ -171,40 +171,11 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
     );
   }
 
-  /**
-   * True if the stored file is a PDF: prefer docStorageDTO.fileName,
-   * then documentReference, then docStorageDTO.fileType, then documentName.
-   */
   isCheckedPdf(item: FPDocAuthWithDocumentDTO): boolean {
-    const doc = item && item.fpDocument;
-    if (!doc) {
-      return false;
-    }
-    const st = doc.docStorageDTO;
-    if (st && st.fileName) {
-      return this.fileNameIndicatesPdf(st.fileName);
-    }
-    if (doc.documentReference) {
-      return this.fileNameIndicatesPdf(doc.documentReference);
-    }
-    if (st && st.fileType) {
-      const ft = String(st.fileType).toLowerCase();
-      if (ft === 'pdf' || ft === 'application/pdf' || ft.endsWith('/pdf')) {
-        return true;
-      }
-    }
-    if (doc.documentName) {
-      return this.fileNameIndicatesPdf(doc.documentName);
-    }
-    return false;
-  }
-
-  private fileNameIndicatesPdf(name: string): boolean {
-    const last = name.lastIndexOf('.');
-    if (last < 0 || last >= name.length - 1) {
-      return false;
-    }
-    return name.slice(last).toLowerCase() === '.pdf';
+    const doc = item.fpDocument;
+    const raw =
+      doc && doc.documentName != null ? String(doc.documentName).toLowerCase() : '';
+    return raw.length > 0 && raw.endsWith('.pdf');
   }
 
   isUploadedDiv(item: FPDocAuthWithDocumentDTO): boolean {
@@ -266,55 +237,60 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
         caseId: dto.caseId,
         documentId: dto.documentReference,
       })
-      .subscribe((res: StandardResponse<FPDocumentDTO>) => {
-        const fp = this.unwrapFPDocumentResponse(res);
-        if (!fp) {
-          return;
-        }
-
-        let b64: string | undefined;
-        let mime = 'application/octet-stream';
-
-        const das = fp.dasDocumentDTO;
-        if (das && (das.base64Str || das.base64StrOrig)) {
-          b64 = das.base64Str || das.base64StrOrig;
-          if (das.contentType) {
-            mime = das.contentType;
+      .subscribe(
+        (res: StandardResponse<FPDocumentDTO>) => {
+          const fp = this.unwrapFPDocumentResponse(res);
+          if (!fp) {
+            return;
           }
-        } else {
-          const ds = fp.docStorageDTO;
-          const stored = ds && ds.document;
-          if (typeof stored === 'string' && stored.length > 0) {
-            b64 = stored;
-            const ft = ds.fileType;
-            if (ft && ft.indexOf('/') !== -1) {
-              mime = ft;
-            } else if (ft && /^pdf$/i.test(ft.trim())) {
-              mime = 'application/pdf';
+
+          let b64: string | undefined;
+          let mime = 'application/octet-stream';
+
+          const das = fp.dasDocumentDTO;
+          if (das && (das.base64Str || das.base64StrOrig)) {
+            b64 = das.base64Str || das.base64StrOrig;
+            if (das.contentType) {
+              mime = das.contentType;
+            }
+          } else {
+            const ds = fp.docStorageDTO;
+            const stored = ds && ds.document;
+            if (typeof stored === 'string' && stored.length > 0) {
+              b64 = stored;
+              const ft = ds.fileType;
+              if (ft && ft.indexOf('/') !== -1) {
+                mime = ft;
+              } else if (ft && /^pdf$/i.test(ft.trim())) {
+                mime = 'application/pdf';
+              }
             }
           }
-        }
 
-        if (!b64) {
-          return;
-        }
+          if (!b64) {
+            return;
+          }
 
-        const defaultMime =
-          mode === 'preview' ? 'application/pdf' : 'application/octet-stream';
-        if (!mime || mime === 'application/octet-stream') {
-          mime = defaultMime;
-        }
+          const defaultMime =
+            mode === 'preview' ? 'application/pdf' : 'application/octet-stream';
+          if (!mime || mime === 'application/octet-stream') {
+            mime = defaultMime;
+          }
 
-        if (mode === 'preview') {
-          window.open('data:' + mime + ';base64,' + b64, '_blank');
-        } else {
-          const name =
-            (fp.docStorageDTO && fp.docStorageDTO.fileName) ||
-            dto.documentName ||
-            'attachment';
-          this.saveBase64AsFile(name, b64, mime);
+          if (mode === 'preview') {
+            window.open('data:' + mime + ';base64,' + b64, '_blank');
+          } else {
+            const name =
+              (fp.docStorageDTO && fp.docStorageDTO.fileName) ||
+              dto.documentName ||
+              'attachment';
+            this.saveBase64AsFile(name, b64, mime);
+          }
+        },
+        () => {
+          console.error('getFPDocumentById failed');
         }
-      });
+      );
   }
 
   private unwrapFPDocumentResponse(
@@ -334,8 +310,7 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
       typeof anyRes.result === 'object'
     ) {
       const inner = anyRes.result as StandardResponse<FPDocumentDTO>;
-      payload =
-        inner.response != null ? inner.response : inner.data;
+      payload = inner.response != null ? inner.response : inner.data;
     }
 
     return payload;
@@ -358,5 +333,4 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
       URL.revokeObjectURL(url);
     }
   }
-
 }

@@ -32,14 +32,6 @@ export class FPDocService {
     return this.http.post<StandardResponse<FPDocAuthDTO>>(this.apiUrl, data);
   }
 
-  getFPDocumentById(
-    body: DasDocumentRequestDTO
-  ): Observable<StandardResponse<FPDocumentDTO>> {
-    return this.http.post<StandardResponse<FPDocumentDTO>>(
-      `${this.docApiUrl}/getFPDocumentById`,
-      body
-    );
-  }
 
   getCombined(): Observable<StandardResponse<FPDocAuthCombinedListDTO>> {
     return this.http.get<StandardResponse<FPDocAuthCombinedListDTO>>(`${this.apiUrl}/combined`);
@@ -59,5 +51,12 @@ export class FPDocService {
 
   getAll(): Observable<StandardResponse<FPDocAuthDTO[]>> {
     return this.http.get<StandardResponse<FPDocAuthDTO[]>>(this.apiUrl);
+  }
+
+  getFPDocumentById(body: DasDocumentRequestDTO): Observable<StandardResponse<FPDocumentDTO>> {
+    return this.http.post<StandardResponse<FPDocumentDTO>>(
+      `${this.docApiUrl}/getFPDocumentById`,
+      body
+    );
   }
 }
