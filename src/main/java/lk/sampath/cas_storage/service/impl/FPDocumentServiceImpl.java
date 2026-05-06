@@ -7,6 +7,7 @@ import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
+import lk.sampath.cas_storage.dto.common.DocStorageDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.DocStorage;
 import lk.sampath.cas_storage.entity.SupportingDoc;
@@ -104,23 +105,57 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(DasDocumentRequestDTO dasDocumentRequestDTO) throws ApiRequestException {
-        log.info("START : getFPDocumentById - FPDocumentServiceImpl dasDocumentRequestDTO : {}", dasDocumentRequestDTO);
+    public ResponseEntity<StandardResponse<FPDocumentDTO>> getFPDocumentById(
+            DasDocumentRequestDTO dasDocumentRequestDTO) throws ApiRequestException {
+        log.info(
+                "START : getFPDocumentById - FPDocumentServiceImpl dasDocumentRequestDTO : {}",
+                dasDocumentRequestDTO);
         if (dasDocumentRequestDTO == null) {
             throw new ApiRequestException("FP document id is required");
         }
-        FPDocument entity = fpDocumentRepository.findById(dasDocumentRequestDTO.getFpDocumentID())
-                .orElseThrow(() -> new ApiRequestException("FP Document not found with ID: " + dasDocumentRequestDTO.getFpDocumentID()));
-
+        FPDocument entity =
+                fpDocumentRepository
+                        .findById(dasDocumentRequestDTO.getFpDocumentID())
+                        .orElseThrow(
+                                () ->
+                                        new ApiRequestException(
+                                                "FP Document not found with ID: "
+                                                        + dasDocumentRequestDTO.getFpDocumentID()));
         FPDocumentDTO fpDocumentDTO = new FPDocumentDTO(entity);
-        DasDocumentDTO dasDocumentDTO = documentService.fetchDocumentFromIntegrationService(dasDocumentRequestDTO);
-        log.info("Document fetched from integration service for FP Document ID: {} , DAS Document ID: {}", dasDocumentRequestDTO.getFpDocumentID(), dasDocumentDTO.getBase64StrOrig());
-        fpDocumentDTO.setDasDocumentDTO(dasDocumentDTO);
 
-        StandardResponse<FPDocumentDTO> response = new StandardResponse<>(ErrorEnums.SUCCESS_CODE.getStatus(), ErrorEnums.SUCCESS_CODE.getLabel(), fpDocumentDTO);
+        String documentReference = entity.getDocumentReference();
+        boolean hasDasReference = documentReference != null && !documentReference.isBlank();
+
+        // When DAS reference exists, content comes from integration only. Do not also embed full
+        // DocStorage bytes — duplicate base64 breaks BFF/gateway limits (Postman direct still
+        // "works").
+        if (hasDasReference) {
+            DasDocumentDTO dasDocumentDTO =
+                    documentService.fetchDocumentFromIntegrationService(dasDocumentRequestDTO);
+            log.info(
+                    "Document fetched from integration for FP Document ID: {}",
+                    dasDocumentRequestDTO.getFpDocumentID());
+            fpDocumentDTO.setDasDocumentDTO(dasDocumentDTO);
+            if (entity.getDocStorage() != null) {
+                fpDocumentDTO.setDocStorageDTO(
+                        new DocStorageDTO(entity.getDocStorage(), false));
+            }
+        } else if (entity.getDocStorage() != null) {
+            DocStorageDTO docStorageDTO =
+                    documentService.downloadDocumentDTOByStorageID(
+                            entity.getDocStorage().getDocStorageID());
+            fpDocumentDTO.setDocStorageDTO(docStorageDTO);
+        }
+
+        StandardResponse<FPDocumentDTO> response =
+                new StandardResponse<>(
+                        ErrorEnums.SUCCESS_CODE.getStatus(),
+                        ErrorEnums.SUCCESS_CODE.getLabel(),
+                        fpDocumentDTO);
         log.info("END : getFPDocumentById - FPDocumentServiceImpl");
         return ResponseEntity.ok().body(response);
     }
+
 
     @Override
     @Transactional(readOnly = true)

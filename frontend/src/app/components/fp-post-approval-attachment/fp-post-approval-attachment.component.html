@@ -35,9 +35,32 @@
             <td>{{item.fpDocument?.description}}</td>
             <td class="text-align-center width-15">
               <div>
-                <!-- Add your action buttons here as needed -->
+                <ng-container *ngIf="isCheckedPdf(item)">
+                  <button class="btn btn-sm btn-success cta-btn" type="button" mdbWavesEffect
+                    (click)="onDownloadDoc(item)" mdbTooltip="View Supporting Doc" placement="left">
+                    <mdb-icon fas icon="fas fa-eye" aria-hidden="true"></mdb-icon>
+                  </button>
+                </ng-container>
+
+                <button class="btn btn-sm btn-success cta-btn" type="button" mdbWavesEffect
+                    (click)="downloadDocument(item)"
+                    mdbTooltip="Download Supporting Doc" placement="left">
+              <mdb-icon fas icon="fa fa-download" aria-hidden="true"></mdb-icon>
+            </button>
+                <!-- <ng-container *appHasAnyPrivilege="masterDataPrivilege.ICAS_SETTINGS_UPLOAD_SUPPORTING_DOCUMENTS">
+              <ng-container *ngIf="isEqualLoginAndAssignUser() && !isApproveStatus() && !isRejected()">
+                <ng-container *ngIf="isUploadedDiv(item)">
+                  <button class="btn btn-sm btn-danger cta-btn delete-button" type="button" mdbWavesEffect
+                          (click)="remove(item)"
+                          mdbTooltip="Delete Supporting Doc" placement="left">
+                    <mdb-icon fas icon="trash-alt" aria-hidden="true"></mdb-icon>
+                  </button>
+                </ng-container>
+              </ng-container>
+            </ng-container> -->
               </div>
             </td>
+
           </tr>
         </ng-container>
         </tbody>

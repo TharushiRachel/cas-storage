@@ -46,4 +46,6 @@ public interface DocumentService {
   ResponseEntity<?> saveDocumentByModule(DocumentModuleDTO request) throws ApiRequestException;
 
   DasDocumentDTO fetchDocumentFromIntegrationService(DasDocumentRequestDTO request) throws ApiRequestException;
+
+  DocStorageDTO downloadDocumentDTOByStorageID(Integer docStorageID)
 }

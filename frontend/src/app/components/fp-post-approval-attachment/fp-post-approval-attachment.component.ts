@@ -268,22 +268,50 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
       })
       .subscribe((res: StandardResponse<FPDocumentDTO>) => {
         const fp = this.unwrapFPDocumentResponse(res);
-        if (!fp || !fp.dasDocumentDTO) {
+        if (!fp) {
           return;
         }
+
+        let b64: string | undefined;
+        let mime = 'application/octet-stream';
+
         const das = fp.dasDocumentDTO;
-        const b64 = das.base64Str || das.base64StrOrig;
+        if (das && (das.base64Str || das.base64StrOrig)) {
+          b64 = das.base64Str || das.base64StrOrig;
+          if (das.contentType) {
+            mime = das.contentType;
+          }
+        } else {
+          const ds = fp.docStorageDTO;
+          const stored = ds && ds.document;
+          if (typeof stored === 'string' && stored.length > 0) {
+            b64 = stored;
+            const ft = ds.fileType;
+            if (ft && ft.indexOf('/') !== -1) {
+              mime = ft;
+            } else if (ft && /^pdf$/i.test(ft.trim())) {
+              mime = 'application/pdf';
+            }
+          }
+        }
+
         if (!b64) {
           return;
         }
+
         const defaultMime =
           mode === 'preview' ? 'application/pdf' : 'application/octet-stream';
-        const mime = das.contentType || defaultMime;
+        if (!mime || mime === 'application/octet-stream') {
+          mime = defaultMime;
+        }
 
         if (mode === 'preview') {
           window.open('data:' + mime + ';base64,' + b64, '_blank');
         } else {
-          const name = dto.documentName || 'attachment';
+          const name =
+            (fp.docStorageDTO && fp.docStorageDTO.fileName) ||
+            dto.documentName ||
+            'attachment';
           this.saveBase64AsFile(name, b64, mime);
         }
       });
@@ -292,11 +320,25 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
   private unwrapFPDocumentResponse(
     res: StandardResponse<FPDocumentDTO>
   ): FPDocumentDTO | undefined {
-    const anyRes = res as StandardResponse<FPDocumentDTO> & { data?: FPDocumentDTO };
-    if (anyRes.response != null) {
-      return anyRes.response;
+    const anyRes = res as StandardResponse<FPDocumentDTO> & {
+      data?: FPDocumentDTO;
+      result?: StandardResponse<FPDocumentDTO>;
+    };
+
+    let payload: FPDocumentDTO | undefined =
+      anyRes.response != null ? anyRes.response : anyRes.data;
+
+    if (
+      payload == null &&
+      anyRes.result != null &&
+      typeof anyRes.result === 'object'
+    ) {
+      const inner = anyRes.result as StandardResponse<FPDocumentDTO>;
+      payload =
+        inner.response != null ? inner.response : inner.data;
     }
-    return anyRes.data;
+
+    return payload;
   }
 
   private saveBase64AsFile(fileName: string, base64: string, mime: string): void {
@@ -316,4 +358,5 @@ export class FpPostApprovalAttachmentComponent implements OnChanges {
       URL.revokeObjectURL(url);
     }
   }
+
 }

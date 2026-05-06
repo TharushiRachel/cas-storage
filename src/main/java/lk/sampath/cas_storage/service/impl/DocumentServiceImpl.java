@@ -707,4 +707,10 @@ public class DocumentServiceImpl implements DocumentService {
     }
   }
 
+  @Override
+public DocStorageDTO downloadDocumentDTOByStorageID(Integer docStorageID) {
+  DocStorage docStorage = docStorageRepository.getOne(docStorageID);
+  return new DocStorageDTO(docStorage);
+}
+
 }

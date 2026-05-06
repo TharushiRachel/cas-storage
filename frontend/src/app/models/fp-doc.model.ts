@@ -57,12 +57,14 @@ export interface DasDocumentDTO {
   base64StrOrig?: string;
 }
 
-/** Mirrors backend DocStorageDTO; binary payload is usually omitted from list APIs. */
+/** Mirrors backend DocStorageDTO. `document` is Base64 in JSON when bytes are included (e.g. download-by-id). */
 export interface DocStorageDTO {
   docStorageID?: number;
   description?: string;
   fileName?: string;
   fileType?: string;
+  /** Base64 when present (Jackson serializes byte[]). */
+  document?: string;
   dasDocument?: string;
   lastUpdatedDateStr?: string;
 }
