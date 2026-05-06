@@ -11,12 +11,8 @@ import { Constants } from 'src/app/core/setting/constants';
 import { AppUtils } from 'src/app/shared/app.utils';
 import { FileUploadError } from 'src/app/shared/dto/file-upload-error';
 import { FileValidator } from 'src/app/shared/validators/file.validator';
+import { asFpDocumentSaveRequest, CreateRequestDTO, FPDocumentDTO } from 'src/app/views/pages/facility-paper/dto/fp-doc-model-dto';
 import { FacilityPaperAddEditService } from 'src/app/views/pages/facility-paper/services/facility-paper-add-edit.service';
-import {
-  asFpDocumentSaveRequest,
-  CreateRequestDTO,
-  FPDocumentDTO,
-} from 'src/app/models/fp-doc.model';
 
 @Component({
   selector: 'app-fp-post-approval-attachement-upload',
@@ -100,7 +96,8 @@ heading: string;
 
     const reader = new FileReader();
     reader.onload = () => {
-      const base64String = (reader.result as string).split(',')[1] ?? '';
+      var base64Arr = (reader.result as string).split(',');
+      var base64String = base64Arr.length > 1 ? base64Arr[1] : '';
       const dataToSend = asFpDocumentSaveRequest(
         this.buildPostApprovalFPDocumentPayload(doc, base64String)
       );
@@ -122,12 +119,12 @@ heading: string;
   ): FPDocumentDTO {
     const fp = this.content.facilityPaper;
     const remark = this.componentForm.value.remark as string;
-    const caseId = fp.caseId ?? '';
-    const userId = String(this.applicationService.getLoggedInUserUserID());
-    const userLevel = this.applicationService.getLoggedInUserUPMGroupCode();
-    const div = this.applicationService.getLoggedInUserDivCode();
-    const userName = this.applicationService.getLoggedInUserUserName();
-    const now = new Date().toISOString();
+    var caseId = (typeof fp.caseId !== 'undefined' && fp.caseId !== null) ? fp.caseId : '';
+    var userId = String(this.applicationService.getLoggedInUserUserID());
+    var userLevel = this.applicationService.getLoggedInUserUPMGroupCode();
+    var div = this.applicationService.getLoggedInUserDivCode();
+    var userName = this.applicationService.getLoggedInUserUserName();
+    var now = new Date().toISOString();
 
     const createRequestDTO: CreateRequestDTO = {
       caseid: caseId,
@@ -136,7 +133,7 @@ heading: string;
       createdUserSol: div,
       caseComment: remark,
       senderid: userId,
-      sdasdocumentname: this.fileToUpload?.name ?? supportingDoc.documentName,
+      sdasdocumentname: (this.fileToUpload && this.fileToUpload.name) ? this.fileToUpload.name : supportingDoc.documentName,
       sdasdocumenttype: remark,
       uploaduserSecuritylevel: userLevel,
       sdasfilecontent: fileBase64,
@@ -156,8 +153,6 @@ heading: string;
       documentReference: '',
       createdDate: now,
       createdBy: userName,
-      modifiedDate: now,
-      modifiedBy: userName,
       createRequestDTO,
     };
   }

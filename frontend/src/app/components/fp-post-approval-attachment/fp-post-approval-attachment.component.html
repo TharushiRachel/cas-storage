@@ -1,73 +1,68 @@
 <ng-container *ngIf="checkUploadAttachmentPrivilege()">
   <div class="d-flex flex-column justify-content-start align-items-start w-100-p ">
-  
+
     <div class="d-flex flex-row w-100-p mb-3 flex-wrap justify-content-between">
       <div class="padding-4px">
         <label class="font-weight-bold mr-auto">Post-Approval Attachments</label>
       </div>
       <ng-container *appHasAnyPrivilege="masterDataPrivilege.ICAS_SETTINGS_UPLOAD_SUPPORTING_DOCUMENTS">
-          <button
-            type="button"
-            class="btn btn-light cta-btn px-sm-2"
-            mdbTooltip="Post-Approval Attachments" placement="left"
-            (click)="openModalAttachmentUpload(facilityPaper)">
-            <i class="fas fa-plus text-dark" aria-hidden="true"></i>
-          </button>
+        <button type="button" class="btn btn-light cta-btn px-sm-2" mdbTooltip="Post-Approval Attachments"
+          placement="left" (click)="openModalAttachmentUpload(facilityPaper)">
+          <i class="fas fa-plus text-dark" aria-hidden="true"></i>
+        </button>
       </ng-container>
     </div>
     <div class="table-responsive">
       <table class="table">
         <thead>
-        <tr>
-          <th>Document Name</th>
-          <th>Uploaded By</th>
-          <th class="text-align-center">Date & Time</th>
-          <th>Remark</th>
-          <th class="text-align-center">Action</th>
-        </tr>
+          <tr>
+            <th>Document Name</th>
+            <th>Uploaded By</th>
+            <th class="text-align-center">Date & Time</th>
+            <th>Remark</th>
+            <th class="text-align-center">Action</th>
+          </tr>
         </thead>
         <tbody>
-        <ng-container *ngFor="let item of fpAuthWithDocuments">
-          <tr>
-            <td>{{item.fpDocument?.documentName}}</td>
-            <td>{{item.fpDocument?.uploadedUserDisplayName || item.fpDocument?.createdBy}}</td>
-            <td class="text-align-center">{{item.fpDocument?.createdDate | date:'dd/MM/yyyy HH:mm'}}</td>
-            <td>{{item.fpDocument?.description}}</td>
-            <td class="text-align-center width-15">
-              <div>
-                <ng-container *ngIf="isCheckedPdf(item)">
+          <ng-container *ngFor="let item of fpAuthWithDocuments">
+            <tr>
+              <td>{{item.fpDocument?.documentName}}</td>
+              <td>{{item.fpDocument?.uploadedUserDisplayName || item.fpDocument?.createdBy}}</td>
+              <td class="text-align-center">{{item.fpDocument?.createdDate | date:'dd/MM/yyyy HH:mm'}}</td>
+              <td>{{item.fpDocument?.description}}</td>
+              <td class="text-align-center width-15">
+                <div>
+                  <ng-container *ngIf="isCheckedPdf(item)">
+                    <button class="btn btn-sm btn-success cta-btn" type="button" mdbWavesEffect
+                      (click)="onDownloadDoc(item)" mdbTooltip="View Supporting Doc" placement="left">
+                      <mdb-icon fas icon="fas fa-eye" aria-hidden="true"></mdb-icon>
+                    </button>
+                  </ng-container>
+
                   <button class="btn btn-sm btn-success cta-btn" type="button" mdbWavesEffect
-                    (click)="onDownloadDoc(item)" mdbTooltip="View Supporting Doc" placement="left">
-                    <mdb-icon fas icon="fas fa-eye" aria-hidden="true"></mdb-icon>
-                  </button>
+                      (click)="downloadDocument(item)"
+                      mdbTooltip="Download Supporting Doc" placement="left">
+                <mdb-icon fas icon="fa fa-download" aria-hidden="true"></mdb-icon>
+              </button>
+                  <!-- <ng-container *appHasAnyPrivilege="masterDataPrivilege.ICAS_SETTINGS_UPLOAD_SUPPORTING_DOCUMENTS">
+                <ng-container *ngIf="isEqualLoginAndAssignUser() && !isApproveStatus() && !isRejected()">
+                  <ng-container *ngIf="isUploadedDiv(item)">
+                    <button class="btn btn-sm btn-danger cta-btn delete-button" type="button" mdbWavesEffect
+                            (click)="remove(item)"
+                            mdbTooltip="Delete Supporting Doc" placement="left">
+                      <mdb-icon fas icon="trash-alt" aria-hidden="true"></mdb-icon>
+                    </button>
+                  </ng-container>
                 </ng-container>
-
-                <button class="btn btn-sm btn-success cta-btn" type="button" mdbWavesEffect
-                    (click)="downloadDocument(item)"
-                    mdbTooltip="Download Supporting Doc" placement="left">
-              <mdb-icon fas icon="fa fa-download" aria-hidden="true"></mdb-icon>
-            </button>
-                <!-- <ng-container *appHasAnyPrivilege="masterDataPrivilege.ICAS_SETTINGS_UPLOAD_SUPPORTING_DOCUMENTS">
-              <ng-container *ngIf="isEqualLoginAndAssignUser() && !isApproveStatus() && !isRejected()">
-                <ng-container *ngIf="isUploadedDiv(item)">
-                  <button class="btn btn-sm btn-danger cta-btn delete-button" type="button" mdbWavesEffect
-                          (click)="remove(item)"
-                          mdbTooltip="Delete Supporting Doc" placement="left">
-                    <mdb-icon fas icon="trash-alt" aria-hidden="true"></mdb-icon>
-                  </button>
-                </ng-container>
-              </ng-container>
-            </ng-container> -->
-              </div>
-            </td>
-
-          </tr>
-        </ng-container>
+              </ng-container> -->
+                </div>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </div>
   </div>
   <a class="download-link" #downloadLink></a>
-  
-  </ng-container>
-  
+
+</ng-container>
