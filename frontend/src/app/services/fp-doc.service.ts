@@ -72,10 +72,17 @@ export class FPDocService {
     );
   }
 
-  getFPDocumentById(body: DasDocumentRequestDTO): Observable<StandardResponse<FPDocumentDTO>> {
-    return this.http.post<StandardResponse<FPDocumentDTO>>(
-      `${this.docApiUrl}/getFPDocumentById`,
-      body
-    );
+  /** Same Promise shape as before; POST target matches Postman `{casStorageBaseUrl}/api/getFPDocumentById`. */
+  getFPDocumentById(payload: any): Promise<StandardResponse<FPDocumentDTO>> {
+    return new Promise((resolve, reject) => {
+      const url = `${environment.casStorageBaseUrl}/api/getFPDocumentById`;
+      this.http
+        .post<StandardResponse<FPDocumentDTO>>(url, payload)
+        .subscribe(
+          (response) => resolve(response),
+          (err) => reject(err),
+        );
+    });
   }
+
 }

@@ -257,8 +257,9 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
       return;
     }
     const payload = this.buildDasDocumentRequest(doc);
-    this.fpDocService.getFPDocumentById(payload).subscribe(
-      (raw: unknown) => {
+    this.fpDocService
+      .getFPDocumentById(payload)
+      .then((raw: unknown) => {
         const parsed = this.readStandardPayload<FPDocumentDTO>(raw);
         if (!parsed.ok) {
           this.alertService.showToaster(
@@ -280,14 +281,13 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
             ? extracted.mime
             : "application/pdf";
         window.open("data:" + mime + ";base64," + extracted.b64, "_blank");
-      },
-      () => {
+      })
+      .catch(() => {
         this.alertService.showToaster(
           "Request failed",
           SETTINGS.TOASTER_MESSAGES.error
         );
-      }
-    );
+      });
   }
 
   /**
@@ -306,8 +306,9 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
 
     const payload = this.buildDasDocumentRequest(doc);
 
-    this.fpDocService.getFPDocumentById(payload).subscribe(
-      (raw: unknown) => {
+    this.fpDocService
+      .getFPDocumentById(payload)
+      .then((raw: unknown) => {
         const parsed = this.readStandardPayload<FPDocumentDTO>(raw);
         if (!parsed.ok) {
           this.alertService.showToaster(
@@ -334,27 +335,24 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
           "Document downloaded successfully",
           SETTINGS.TOASTER_MESSAGES.success
         );
-      },
-      () => {
+      })
+      .catch(() => {
         this.alertService.showToaster(
           "Request failed",
           SETTINGS.TOASTER_MESSAGES.error
         );
-      }
-    );
+      });
   }
 
+  /** Matches Postman: include `documentId: null` when there is no DAS reference */
   private buildDasDocumentRequest(doc: FPDocumentDTO): DasDocumentRequestDTO {
-    const payload: DasDocumentRequestDTO = {
-      fpDocumentID: doc.fpDocumentID as number,
-      caseId: doc.caseId,
-    };
     const ref =
       doc.documentReference != null ? String(doc.documentReference).trim() : "";
-    if (ref !== "") {
-      payload.documentId = ref;
-    }
-    return payload;
+    return {
+      fpDocumentID: doc.fpDocumentID as number,
+      caseId: doc.caseId,
+      documentId: ref !== "" ? ref : null,
+    };
   }
 
   private peelCorporateEnvelope(body: unknown): unknown {

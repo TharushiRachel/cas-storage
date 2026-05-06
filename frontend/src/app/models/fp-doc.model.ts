@@ -48,7 +48,7 @@ export interface CreateRequestDTO {
 export interface DasDocumentRequestDTO {
   fpDocumentID?: number;
   caseId?: string;
-  documentId?: string;
+  documentId?: string | null;
 }
 
 export interface DasDocumentDTO {
