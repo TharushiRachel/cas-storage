@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  DocStorageDTO,
+  DasDocumentDTO,
   DasDocumentRequestDTO,
   DocumentModuleDTO,
   FPDocAuthDTO,
@@ -10,7 +12,7 @@ import {
   FPDocAuthWithDocumentDTO,
   FPDocumentDTO,
   StandardResponse,
-} from '../models/fp-doc.model';
+} from 'src/app/models/fp-doc.model';
 
 @Injectable({
   providedIn: 'root'
@@ -51,6 +53,23 @@ export class FPDocService {
 
   getAll(): Observable<StandardResponse<FPDocAuthDTO[]>> {
     return this.http.get<StandardResponse<FPDocAuthDTO[]>>(this.apiUrl);
+  }
+
+  getDocumentById(
+    body: DasDocumentRequestDTO
+  ): Observable<StandardResponse<DasDocumentDTO>> {
+    return this.http.post<StandardResponse<DasDocumentDTO>>(
+      `${this.docApiUrl}/getDocumentById`,
+      body
+    );
+  }
+
+  getDocumentStorageByDocStorageID(
+    docStorageID: number
+  ): Observable<StandardResponse<DocStorageDTO>> {
+    return this.http.get<StandardResponse<DocStorageDTO>>(
+      `${this.docApiUrl}/getDocumentStorageByDocStorageID/${docStorageID}`
+    );
   }
 
   getFPDocumentById(body: DasDocumentRequestDTO): Observable<StandardResponse<FPDocumentDTO>> {
