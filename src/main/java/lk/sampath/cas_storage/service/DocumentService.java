@@ -47,5 +47,5 @@ public interface DocumentService {
 
   DasDocumentDTO fetchDocumentFromIntegrationService(DasDocumentRequestDTO request) throws ApiRequestException;
 
-  DocStorageDTO downloadDocumentDTOByStorageID(Integer docStorageID)
+  DocStorageDTO downloadDocumentDTOByStorageID(Integer docStorageID);
 }

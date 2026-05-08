@@ -166,112 +166,6 @@ public class DocumentServiceImpl implements DocumentService {
     return ResponseEntity.ok().body(response);
   }
 
-//  @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = ApiRequestException.class)
-//  public ResponseEntity<StandardResponse<CreateCaseResponseDTO>> createCase(
-//      CreateRequestDTO request) {
-//    log.info("START : createcase - DocumentServiceImpl request : {}", request.getCreatedUserId());
-//
-//    CreateCaseDTO createCaseDTO = new CreateCaseDTO();
-//    CreateCaseResponseDTO createCaseResponseDTO = new CreateCaseResponseDTO();
-//    CreateDocumentRefResponseDTO createDocumentRefResponseDTO;
-//
-//    try {
-//      if (request.getCaseid() == null || request.getCaseid().isEmpty()) {
-//        log.info("Case ID is null or empty, creating a new case.");
-//        log.info("Property file value for template path: {}", propertyFileValue.getTemplatePath());
-//
-//        createCaseDTO.setLastNodeID(lastNodeID);
-//        createCaseDTO.setLastNodeElementOrder(lastNodeElementOrder);
-//        createCaseDTO.setCreatedUserId(request.getCreatedUserId());
-//        createCaseDTO.setUserLevel(request.getUserLevel());
-//        createCaseDTO.setCreatedUserSol(request.getCreatedUserSol());
-//        createCaseDTO.setCaseComment(request.getCaseComment());
-//        createCaseDTO.setDasCaseProperties(new ArrayList<>());
-//        createCaseDTO.setCreatedUserId(request.getSenderid());
-//
-//        log.info("Request to the integration service : {}", createCaseDTO);
-//        createCaseResponseDTO = integrationService.createCaseFromDas(createCaseDTO);
-//
-//        createDocumentRefResponseDTO = this.createDocumentRef(request, createCaseResponseDTO);
-//      }
-//      else {
-//        log.info("Using existing Case ID: {}", request.getCaseid());
-//        createDocumentRefResponseDTO = this.createDocumentRef(request, createCaseResponseDTO);
-//        createCaseResponseDTO.setCaseid(request.getCaseid());
-//      }
-//
-//      createCaseResponseDTO.setDocumentRef(createDocumentRefResponseDTO.getDocumentRef());
-//
-//      if ("ERROR".equalsIgnoreCase(createCaseResponseDTO.getResponceFlag())) {
-//        log.error("Case creation failed. Response Flag: ERROR");
-//        throw new ApiRequestException("Case creation failed due to SDAS service error.");
-//      }
-//
-//      StandardResponse<CreateCaseResponseDTO> response =
-//          new StandardResponse<>(
-//              ErrorEnums.SUCCESS_CODE.getStatus(),
-//              ErrorEnums.SUCCESS_CODE.getLabel(),
-//              createCaseResponseDTO);
-//
-//      log.info(
-//          "END : getDocumentStorageList - DocumentServiceImpl response status : {} ",
-//          response.getMessage());
-//      return ResponseEntity.ok().body(response);
-//
-//    } catch (ApiRequestException e) {
-//      log.error("API Request Exception occurred: ", e);
-//      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//          .body(new StandardResponse<>(ErrorEnums.SUCCESS_CODE.getStatus(), e.getMessage(), null));
-//
-//    }
-//    catch (Exception e) {
-//      log.error("Unexpected error occurred in createCase: ", e);
-//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//          .body(
-//              new StandardResponse<>(
-//                  ErrorEnums.SUCCESS_CODE.getStatus(), "Unexpected server error", null));
-//    }
-//  }
-
-
-//  @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = ApiRequestException.class)
-//  public ResponseEntity<StandardResponse<CreateCaseResponseDTO>> createCase(CreateRequestDTO request) {
-//
-//    log.info("START : createCase - DocumentServiceImpl request : {}", request.getCreatedUserId());
-//
-//    try {
-//
-//      CreateCaseResponseDTO responseDTO = processCaseCreation(request);
-//
-//      StandardResponse<CreateCaseResponseDTO> response = new StandardResponse<>(ErrorEnums.SUCCESS_CODE.getStatus(), ErrorEnums.SUCCESS_CODE.getLabel(), responseDTO);
-//
-//      log.info("END : createCase - response status : {}", response.getMessage());
-//
-//      return ResponseEntity.ok().body(response);
-//
-//    } catch (ApiRequestException e) {
-//
-//      log.error("API Request Exception occurred: ", e);
-//
-//      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//              .body(new StandardResponse<>(
-//                      ErrorEnums.SUCCESS_CODE.getStatus(),
-//                      e.getMessage(),
-//                      null
-//              ));
-//
-//    } catch (Exception e) {
-//
-//      log.error("Unexpected error occurred in createCase: ", e);
-//
-//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//              .body(new StandardResponse<>(
-//                      ErrorEnums.SUCCESS_CODE.getStatus(),
-//                      "Unexpected server error",
-//                      null
-//              ));
-//    }
-//  }
 
   public CreateCaseResponseDTO processCaseCreation(FPDocumentDTO fpDocumentDTO) {
 
@@ -292,7 +186,7 @@ public class DocumentServiceImpl implements DocumentService {
       createCaseDTO.setLastNodeID(lastNodeID);
       createCaseDTO.setLastNodeElementOrder(lastNodeElementOrder);
       createCaseDTO.setCreatedUserId(
-          normalizeDasCreatedUserId(request.getSenderid(), request.getCreatedUserId()));
+              normalizeDasCreatedUserId(request.getSenderid(), request.getCreatedUserId()));
       createCaseDTO.setUserLevel(request.getUserLevel());
       createCaseDTO.setCreatedUserSol(request.getCreatedUserSol());
       createCaseDTO.setCaseComment(request.getCaseComment());
@@ -302,7 +196,7 @@ public class DocumentServiceImpl implements DocumentService {
       properties.add(new CreateCasePropertyDTO("casReference", fpDocumentDTO.getFpRefNumber()));
       properties.add(new CreateCasePropertyDTO("type", "FP"));
 
-      createCaseDTO.setDasCaseProperties(properties);
+      createCaseDTO.setProperty(properties);
 
       log.info("Request to the integration service : {}", createCaseDTO);
 
@@ -336,7 +230,7 @@ public class DocumentServiceImpl implements DocumentService {
       createCaseResponseDTO.setDocumentRef(createDocumentRefResponseDTO.getDocumentRef());
       createCaseResponseDTO.setDocStorageId(null);
       if (createCaseResponseDTO.getResponceFlag() == null
-          || createCaseResponseDTO.getResponceFlag().isBlank()) {
+              || createCaseResponseDTO.getResponceFlag().isBlank()) {
         createCaseResponseDTO.setResponceFlag("SUCCESS");
       }
       log.info("Both DAS case id and document ref are present; file not stored in Doc Storage.");
@@ -344,11 +238,27 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     log.warn(
-        "DAS integration incomplete (caseOk={}, documentRefOk={}); persisting document in Doc Storage.",
-        dasCaseOk,
-        dasDocRefOk);
+            "DAS integration incomplete (caseOk={}, documentRefOk={}); persisting document in Doc Storage.",
+            dasCaseOk,
+            dasDocRefOk);
     return buildCreateCaseResponseFromLocalDocStorage(
-        request, dasCaseOk ? resolvedCaseId : null, null);
+            request, dasCaseOk ? resolvedCaseId : null, null);
+  }
+
+
+  private static String normalizeDasCreatedUserId(String senderId, String createdUserId) {
+    String raw =
+            senderId != null && !senderId.isBlank()
+                    ? senderId.trim()
+                    : (createdUserId != null ? createdUserId.trim() : null);
+    if (raw == null || raw.isEmpty()) {
+      return raw;
+    }
+    try {
+      return Long.toString((long) Double.parseDouble(raw));
+    } catch (NumberFormatException ignored) {
+      return raw;
+    }
   }
 
   private boolean shouldFallbackToDocStorageAfterDasCase(CreateCaseResponseDTO dto) {
@@ -363,7 +273,7 @@ public class DocumentServiceImpl implements DocumentService {
   }
 
   private CreateCaseResponseDTO buildCreateCaseResponseFromLocalDocStorage(
-      CreateRequestDTO request, String caseId, String documentReference) throws ApiRequestException {
+          CreateRequestDTO request, String caseId, String documentReference) throws ApiRequestException {
     DocStorage saved = persistRequestFileToDocStorage(request, caseId, documentReference);
     CreateCaseResponseDTO dto = new CreateCaseResponseDTO();
     dto.setResponceFlag("SUCCESS");
@@ -371,13 +281,14 @@ public class DocumentServiceImpl implements DocumentService {
     dto.setDocumentRef(documentReference);
     dto.setDocStorageId(saved.getDocStorageID());
     log.info(
-        "Document stored in Doc Storage with id {} (DAS incomplete or unavailable).",
-        saved.getDocStorageID());
+            "Document stored in Doc Storage with id {} (DAS incomplete or unavailable).",
+            saved.getDocStorageID());
     return dto;
   }
 
+
   private DocStorage persistRequestFileToDocStorage(
-      CreateRequestDTO request, String caseId, String documentReference) throws ApiRequestException {
+          CreateRequestDTO request, String caseId, String documentReference) throws ApiRequestException {
     String b64 = request.getSdasfilecontent();
     if (b64 == null || b64.isBlank()) {
       throw new ApiRequestException("Cannot store document locally: sdasfilecontent is empty");
@@ -405,24 +316,21 @@ public class DocumentServiceImpl implements DocumentService {
 
   private static boolean hasNonEmptyDocumentRef(CreateDocumentRefResponseDTO dto) {
     return dto != null
-        && dto.getDocumentRef() != null
-        && !dto.getDocumentRef().isBlank();
+            && dto.getDocumentRef() != null
+            && !dto.getDocumentRef().isBlank();
   }
 
-  /**
-   * Calls DAS to create a document reference; returns {@code null} on failure instead of throwing.
-   */
   private CreateDocumentRefResponseDTO tryCreateDocumentRef(
-      CreateRequestDTO request, CreateCaseResponseDTO caseResponseDTO) {
+          CreateRequestDTO request, CreateCaseResponseDTO caseResponseDTO) {
     log.info(
-        "START : tryCreateDocumentRef - DocumentServiceImpl request : {}",
-        request.getCreatedUserId());
+            "START : tryCreateDocumentRef - DocumentServiceImpl request : {}",
+            request.getCreatedUserId());
 
     try {
       CreateDocumentRefRequestDTO requestDTO = new CreateDocumentRefRequestDTO();
       log.info(
-          "Property file value for template path for document: {}",
-          propertyFileValue.getTemplatePath());
+              "Property file value for template path for document: {}",
+              propertyFileValue.getTemplatePath());
 
       requestDTO.setFoldersavein(foldersavein);
       requestDTO.setSenderid(request.getSenderid());
@@ -448,11 +356,11 @@ public class DocumentServiceImpl implements DocumentService {
 
       log.info("Prepared CreateDocumentRefRequestDTO for integration service: {}", requestDTO);
       log.info(
-          "Request to the integration service for create doc ref: {}",
-          requestDTO.getSdasdocumentname());
+              "Request to the integration service for create doc ref: {}",
+              requestDTO.getSdasdocumentname());
 
       CreateDocumentRefResponseDTO createDocumentRefResponseDTO =
-          integrationService.createDocumentRefFromDas(requestDTO);
+              integrationService.createDocumentRefFromDas(requestDTO);
 
       if (!hasNonEmptyDocumentRef(createDocumentRefResponseDTO)) {
         log.warn("Document ref missing or empty from DAS; will rely on Doc Storage if needed.");
@@ -460,8 +368,8 @@ public class DocumentServiceImpl implements DocumentService {
       }
 
       log.info(
-          "END : tryCreateDocumentRef - DocumentServiceImpl response : {}",
-          createDocumentRefResponseDTO);
+              "END : tryCreateDocumentRef - DocumentServiceImpl response : {}",
+              createDocumentRefResponseDTO);
       return createDocumentRefResponseDTO;
 
     } catch (ApiRequestException e) {
@@ -470,6 +378,71 @@ public class DocumentServiceImpl implements DocumentService {
     } catch (Exception e) {
       log.warn("Unexpected error in tryCreateDocumentRef: {}", e.getMessage(), e);
       return null;
+    }
+  }
+
+  private CreateDocumentRefResponseDTO createDocumentRef(
+      CreateRequestDTO request, CreateCaseResponseDTO caseResponseDTO) throws ApiRequestException {
+    log.info(
+        "START : createDocumentRef - DocumentServiceImpl request : {}", request.getCreatedUserId());
+
+    try {
+      CreateDocumentRefRequestDTO requestDTO = new CreateDocumentRefRequestDTO();
+      log.info(
+          "Property file value for template path for document: {}",
+          propertyFileValue.getTemplatePath());
+
+//      String path = propertyFileValue.getTemplatePath() + File.separator + "document-ref.json";
+//      File file = new File(path);
+//
+//      JsonNode root = objectMapper.readTree(file);
+
+      requestDTO.setFoldersavein(foldersavein);
+      requestDTO.setSenderid(request.getSenderid());
+      requestDTO.setObjectstorename(objectstorename);
+      requestDTO.setSdasdocumentname(request.getSdasdocumentname());
+
+      if (request.getCaseid() == null || request.getCaseid().isEmpty()) {
+        requestDTO.setCaseid(caseResponseDTO.getCaseid());
+      } else {
+        requestDTO.setCaseid(request.getCaseid());
+      }
+
+      requestDTO.setSdasdocumenttype(request.getSdasdocumenttype());
+      requestDTO.setAppreqid(appreqid);
+      requestDTO.setUploaduserSecuritylevel(request.getUploaduserSecuritylevel());
+      requestDTO.setSdasfilecontent(request.getSdasfilecontent());
+      requestDTO.setSdasdocuemntsecurity(sdasdocuemntsecurity);
+      requestDTO.setSdasdocumenttypeid(sdasdocumenttypeid);
+      requestDTO.setCreatedUserId(request.getSenderid());
+      requestDTO.setCreatedUserSol(request.getCreatedUserSol());
+      requestDTO.setCreatedUserLevel(request.getUserLevel());
+      requestDTO.setCaseComment(request.getCaseComment());
+
+      log.info("Prepared CreateDocumentRefRequestDTO for integration service: {}", requestDTO);
+      log.info("Request to the integration service for create doc ref: {}", requestDTO.getSdasdocumentname());
+
+      CreateDocumentRefResponseDTO createDocumentRefResponseDTO =
+          integrationService.createDocumentRefFromDas(requestDTO);
+
+      if (createDocumentRefResponseDTO.getDocumentRef().isEmpty()) {
+        log.error("Document Ref creation failed. documentRef: Empty");
+        throw new ApiRequestException("Document Ref creation failed due to SDAS service error.");
+      }
+
+      log.info(
+          "END : createDocumentRef - DocumentServiceImpl response : {}",
+          createDocumentRefResponseDTO);
+      return createDocumentRefResponseDTO;
+
+    }
+
+    catch (ApiRequestException e) {
+      log.error("Integration service call failed while creating document reference: ", e);
+      throw e; // re-throw so the controller can catch and handle it
+    } catch (Exception e) {
+      log.error("Unexpected error in createDocumentRef: ", e);
+      throw new ApiRequestException("Unexpected error while creating document reference", e);
     }
   }
 
@@ -688,29 +661,9 @@ public class DocumentServiceImpl implements DocumentService {
     }
   }
 
-  /**
-   * SDAS rejects user ids in forms like {@code 40355.0}; those can appear when {@code senderid} is
-   * carried as a JSON number or via {@code ObjectMapper#convertValue}.
-   */
-  private static String normalizeDasCreatedUserId(String senderId, String createdUserId) {
-    String raw =
-        senderId != null && !senderId.isBlank()
-            ? senderId.trim()
-            : (createdUserId != null ? createdUserId.trim() : null);
-    if (raw == null || raw.isEmpty()) {
-      return raw;
-    }
-    try {
-      return Long.toString((long) Double.parseDouble(raw));
-    } catch (NumberFormatException ignored) {
-      return raw;
-    }
-  }
-
   @Override
-public DocStorageDTO downloadDocumentDTOByStorageID(Integer docStorageID) {
-  DocStorage docStorage = docStorageRepository.getOne(docStorageID);
-  return new DocStorageDTO(docStorage);
-}
-
+  public DocStorageDTO downloadDocumentDTOByStorageID(Integer docStorageID) {
+    DocStorage docStorage = docStorageRepository.getOne(docStorageID);
+    return new DocStorageDTO(docStorage);
+  }
 }

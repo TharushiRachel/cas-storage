@@ -54,4 +54,7 @@ public class FPDocument extends UserTrackableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "DOC_STATUS")
     private FPDocStatus docStatus;
+
+    @Column(name = "DOCUMENT_NAME")
+    private String documentName;
 }

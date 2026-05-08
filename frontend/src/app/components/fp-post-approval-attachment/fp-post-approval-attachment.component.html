@@ -44,9 +44,9 @@
                       mdbTooltip="Download Supporting Doc" placement="left">
                 <mdb-icon fas icon="fa fa-download" aria-hidden="true"></mdb-icon>
               </button>
-                  <!-- <ng-container *appHasAnyPrivilege="masterDataPrivilege.ICAS_SETTINGS_UPLOAD_SUPPORTING_DOCUMENTS">
-                <ng-container *ngIf="isEqualLoginAndAssignUser() && !isApproveStatus() && !isRejected()">
-                  <ng-container *ngIf="isUploadedDiv(item)">
+                  <ng-container *appHasAnyPrivilege="masterDataPrivilege.ICAS_SETTINGS_UPLOAD_SUPPORTING_DOCUMENTS">
+                <ng-container>
+                  <ng-container>
                     <button class="btn btn-sm btn-danger cta-btn delete-button" type="button" mdbWavesEffect
                             (click)="remove(item)"
                             mdbTooltip="Delete Supporting Doc" placement="left">
@@ -54,7 +54,7 @@
                     </button>
                   </ng-container>
                 </ng-container>
-              </ng-container> -->
+              </ng-container>
                 </div>
               </td>
             </tr>

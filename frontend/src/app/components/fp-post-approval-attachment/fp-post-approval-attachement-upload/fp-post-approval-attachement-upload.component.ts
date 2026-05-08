@@ -20,16 +20,16 @@ import { FacilityPaperAddEditService } from 'src/app/views/pages/facility-paper/
   styleUrls: ['./fp-post-approval-attachement-upload.component.scss']
 })
 export class FpPostApprovalAttachementUploadComponent implements OnInit {
-heading: string;
+heading!: string;
   content: any;
-  componentForm: FormGroup;
+  componentForm!: FormGroup;
   formErrors: any = {};
 
-  fileToUpload: File = null;
+  fileToUpload: File | null = null;
   fileUploadError: FileUploadError = new FileUploadError();
 
   supportingDocs: any = [];
-  result: Subject<any>;
+  result!: Subject<any>;
 
   onSupportingDocChange: Subscription = new Subscription();
   action: Subject<any> = new Subject<any>();
@@ -78,9 +78,12 @@ heading: string;
     return this.fileToUpload != null && !this.fileUploadError.hasError;
   }
 
-  selectFile(event) {
-    this.fileToUpload = event.target.files[0];
-    this.fileUploadError = FileValidator.isValidFile(this.fileToUpload);
+  selectFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.files && input.files.length > 0) {
+      this.fileToUpload = input.files[0];
+      this.fileUploadError = FileValidator.isValidFile(this.fileToUpload);
+    }
   }
 
   addFacilityDocument() {
@@ -94,23 +97,25 @@ heading: string;
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      var base64Arr = (reader.result as string).split(',');
-      var base64String = base64Arr.length > 1 ? base64Arr[1] : '';
-      const dataToSend = asFpDocumentSaveRequest(
-        this.buildPostApprovalFPDocumentPayload(doc, base64String)
-      );
-      // FacilityPaperAddEditService handles toasters; resolves inner response or null
-      void this.facilityPaperAddEditService
-        .saveDocument(dataToSend as any)
-        .then((saved: unknown) => {
-          if (saved != null) {
-            this.mdbModalRef.hide();
-          }
-        });
-    };
-    reader.readAsDataURL(this.fileToUpload);
+    if (this.fileToUpload) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        var base64Arr = (reader.result as string).split(',');
+        var base64String = base64Arr.length > 1 ? base64Arr[1] : '';
+        const dataToSend = asFpDocumentSaveRequest(
+          this.buildPostApprovalFPDocumentPayload(doc, base64String)
+        );
+        // FacilityPaperAddEditService handles toasters; resolves inner response or null
+        void this.facilityPaperAddEditService
+          .saveDocument(dataToSend as any)
+          .then((saved: unknown) => {
+            if (saved != null) {
+              this.mdbModalRef.hide();
+            }
+          });
+      };
+      reader.readAsDataURL(this.fileToUpload);
+    }
   }
 
   private buildPostApprovalFPDocumentPayload(
@@ -154,6 +159,7 @@ heading: string;
       createdDate: now,
       createdBy: userName,
       createRequestDTO,
+      docStorageDTO: undefined
     };
   }
 }

@@ -1,5 +1,6 @@
 package lk.sampath.cas_storage.dto.facilityPaper;
 
+import lk.sampath.cas_storage.dto.common.DocStorageDTO;
 import lk.sampath.cas_storage.dto.dasstorage.CreateRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.entity.facilityPaper.FPDocument;
@@ -54,6 +55,8 @@ public class FPDocumentDTO {
 
     private String fpRefNumber;
 
+    private String individualDocumentName;
+
     private DocStorageDTO docStorageDTO;
 
     public FPDocumentDTO(FPDocument fpDocument) {
@@ -73,6 +76,7 @@ public class FPDocumentDTO {
         this.modifiedBy = fpDocument.getModifiedBy();
         this.docStorageID = fpDocument.getDocStorage() != null ? fpDocument.getDocStorage().getDocStorageID() : null;
         this.docStatus = fpDocument.getDocStatus();
+        this.individualDocumentName = fpDocument.getDocumentName();
 
         if (fpDocument.getDocStorage() != null && fpDocument.getDocStorage().getDocStorageID() != null) {
             // Metadata only: embedding byte[] as base64 per row breaks BFF/gateway limits and yields generic client errors.

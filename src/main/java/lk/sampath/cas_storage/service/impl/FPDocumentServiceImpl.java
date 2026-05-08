@@ -1,13 +1,14 @@
 package lk.sampath.cas_storage.service.impl;
 
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
+import lk.sampath.cas_storage.dto.DownloadDocumentDTO;
+import lk.sampath.cas_storage.dto.common.DocStorageDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
-import lk.sampath.cas_storage.dto.common.DocStorageDTO;
 import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
 import lk.sampath.cas_storage.entity.DocStorage;
 import lk.sampath.cas_storage.entity.SupportingDoc;
@@ -27,11 +28,16 @@ import lk.sampath.cas_storage.service.FPDocumentService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,6 +83,7 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             fpDocument.setCreatedDate(fpDocumentDTO.getCreatedDate());
             fpDocument.setDocStatus(fpDocumentDTO.getDocStatus());
             fpDocument.setCreatedDate(new Date());
+            fpDocument.setDocumentName(fpDocumentDTO.getIndividualDocumentName());
 
             CreateCaseResponseDTO caseResponse =documentService.processCaseCreation(fpDocumentDTO);
 
@@ -90,6 +97,8 @@ public class FPDocumentServiceImpl implements FPDocumentService {
             }
 
             FPDocument savedEntity = fpDocumentRepository.save(fpDocument);
+            convertFpDocumentToFPDocAuth(savedEntity, fpDocumentDTO);
+
             FPDocumentDTO responseDTO = new FPDocumentDTO(savedEntity);
 
             StandardResponse<FPDocumentDTO> response = new StandardResponse<>(ErrorEnums.SUCCESS_CODE.getStatus(), ErrorEnums.SUCCESS_CODE.getLabel(), responseDTO);
@@ -113,28 +122,16 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         if (dasDocumentRequestDTO == null) {
             throw new ApiRequestException("FP document id is required");
         }
-        FPDocument entity =
-                fpDocumentRepository
-                        .findById(dasDocumentRequestDTO.getFpDocumentID())
-                        .orElseThrow(
-                                () ->
-                                        new ApiRequestException(
-                                                "FP Document not found with ID: "
-                                                        + dasDocumentRequestDTO.getFpDocumentID()));
+        FPDocument entity = fpDocumentRepository.findById(dasDocumentRequestDTO.getFpDocumentID()).orElseThrow(() -> new ApiRequestException("FP Document not found with ID: " + dasDocumentRequestDTO.getFpDocumentID()));
         FPDocumentDTO fpDocumentDTO = new FPDocumentDTO(entity);
 
         String documentReference = entity.getDocumentReference();
         boolean hasDasReference = documentReference != null && !documentReference.isBlank();
 
-        // When DAS reference exists, content comes from integration only. Do not also embed full
-        // DocStorage bytes — duplicate base64 breaks BFF/gateway limits (Postman direct still
-        // "works").
         if (hasDasReference) {
             DasDocumentDTO dasDocumentDTO =
                     documentService.fetchDocumentFromIntegrationService(dasDocumentRequestDTO);
-            log.info(
-                    "Document fetched from integration for FP Document ID: {}",
-                    dasDocumentRequestDTO.getFpDocumentID());
+            log.info("Document fetched from integration for FP Document ID: {}", dasDocumentRequestDTO.getFpDocumentID());
             fpDocumentDTO.setDasDocumentDTO(dasDocumentDTO);
             if (entity.getDocStorage() != null) {
                 fpDocumentDTO.setDocStorageDTO(
@@ -156,7 +153,6 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         return ResponseEntity.ok().body(response);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<StandardResponse<List<FPDocumentDTO>>> getFPDocumentsByCaseId(String caseId)
@@ -175,6 +171,27 @@ public class FPDocumentServiceImpl implements FPDocumentService {
                         list);
         log.info("END : getFPDocumentsByCaseId - count : {}", list.size());
         return ResponseEntity.ok().body(response);
+    }
+
+
+    private FPDocAuthDTO convertFpDocumentToFPDocAuth(FPDocument fpDocument, FPDocumentDTO fpDocumentDTO) {
+        FPDocAuthDTO dto = new FPDocAuthDTO();
+        dto.setFpDocId(fpDocument.getFpDocumentID());
+        dto.setFacilityPaperId(fpDocument.getFacilityPaperID());
+        dto.setAddedBy(fpDocument.getCreatedBy());
+        dto.setAddedDate(fpDocument.getCreatedDate());
+        dto.setAddedUserDisplayName(fpDocument.getUploadedUserDisplayName());
+        dto.setAddedUserDivCode(fpDocument.getUploadedDivCode());
+        dto.setAddedUserWorkClass(fpDocumentDTO.getCreateRequestDTO().getUserLevel());
+        dto.setAddedUserDivCode(fpDocument.getUploadedDivCode());
+        dto.setAddedUserBranchCode(fpDocumentDTO.getUploadedDivCode());
+        dto.setCurrentAssignUser("");
+        //need to add the other
+
+        saveOrUpdateFPDocAuth(dto);
+
+        return dto;
+
     }
 
     @Override
@@ -392,4 +409,56 @@ public class FPDocumentServiceImpl implements FPDocumentService {
         dto.setFpDocId(fpDocId);
         return dto;
     }
+
+    @Override
+    public FPDocumentDTO deactivateFPDocument(Integer fpDocumentID) throws ApiRequestException {
+        FPDocument fpDocument = fpDocumentRepository.findById(fpDocumentID)
+                .orElseThrow(() -> new ApiRequestException("FP Document not found with ID: " + fpDocumentID));
+        fpDocument.setStatus(Status.INA);
+        FPDocument updatedDocument = fpDocumentRepository.save(fpDocument);
+        return new FPDocumentDTO(updatedDocument);
+    }
+
+    @Override
+    public DownloadDocumentDTO downloadFPDocument(Integer fpDocumentId) throws ApiRequestException, IOException {
+        log.info("START : downloadFPDocument : {}", fpDocumentId);
+
+        FPDocument fpDocument = fpDocumentRepository.findById(fpDocumentId).orElseThrow(() -> new ApiRequestException("FP Document not found"));
+
+        if (fpDocument.getDocStorage() == null) {
+            throw new ApiRequestException("Document storage not found");
+        }
+
+        byte[] fileData = new byte[0];
+
+        if(fpDocument.getDocStorage().getDocStorageID() != null){
+            DocStorage docStorage = docStorageRepository.findById(fpDocument.getDocStorage().getDocStorageID()).orElseThrow(() -> new ApiRequestException("Stored document not found"));
+            fileData = docStorage.getDocument();
+        }
+        if(fpDocument.getDocumentReference() != null && !fpDocument.getDocumentReference().isBlank()){
+            DasDocumentRequestDTO dasDocumentRequestDTO = new DasDocumentRequestDTO();
+            dasDocumentRequestDTO.setCaseId(fpDocument.getCaseId());
+            dasDocumentRequestDTO.setDocumentId(fpDocument.getDocumentReference());
+            DasDocumentDTO dasDocumentDTO = documentService.fetchDocumentFromIntegrationService(dasDocumentRequestDTO);
+            String dasDocument = dasDocumentDTO.getBase64StrOrig();
+            fileData = Base64.getDecoder().decode(dasDocument);
+        }
+
+
+
+        if (fileData == null || fileData.length == 0) {
+            throw new ApiRequestException(
+                    "Document content is empty");
+        }
+
+        DownloadDocumentDTO downloadDocumentDTO = new DownloadDocumentDTO();
+        downloadDocumentDTO.setDocument(fileData);
+        downloadDocumentDTO.setFileName(fpDocument.getDocumentName());
+
+
+        //return fileData;
+        log.info("END : downloadFPDocument : {}", fpDocumentId);
+        return downloadDocumentDTO;
+    }
+
 }

@@ -9,8 +9,10 @@
  */
 package lk.sampath.cas_storage.dto.common;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
+import java.util.Base64;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lk.sampath.cas_storage.entity.DocStorage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +21,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DocStorageDTO implements Serializable {
 
   private Integer docStorageID;
@@ -28,7 +29,6 @@ public class DocStorageDTO implements Serializable {
 
   private String fileName;
 
-  /** Omitted from JSON when null — use {@link #DocStorageDTO(DocStorage, boolean)} with {@code false} for list/summary APIs. */
   private byte[] document;
 
   private String dasDocument;
@@ -36,6 +36,16 @@ public class DocStorageDTO implements Serializable {
   private String lastUpdatedDateStr;
 
   private String fileType;
+
+  public DocStorageDTO(DocStorageDTO docStorageDTO) {
+    this.docStorageID = docStorageDTO.getDocStorageID();
+    this.description = docStorageDTO.getDescription();
+    this.fileName = docStorageDTO.getFileName();
+    this.document = docStorageDTO.getDocument();
+    this.lastUpdatedDateStr = docStorageDTO.getLastUpdatedDateStr();
+    this.dasDocument = docStorageDTO.getDasDocument();
+    this.fileType = docStorageDTO.getFileType();
+  }
 
   /**
    * Loads all fields including {@link #document} bytes (for dedicated download/document-storage endpoints).
@@ -52,19 +62,13 @@ public class DocStorageDTO implements Serializable {
     this.docStorageID = docStorage.getDocStorageID();
     this.description = docStorage.getDescription();
     this.fileName = docStorage.getFileName();
-    this.document = includeDocumentBytes ? docStorage.getDocument() : null;
     this.lastUpdatedDateStr = docStorage.getDescription();
     this.dasDocument = docStorage.getDocumentReference();
     this.fileType = docStorage.getFileType();
-  }
+    this.document = includeDocumentBytes ? docStorage.getDocument() : null;
 
-  public DocStorageDTO(DocStorageDTO docStorageDTO) {
-    this.docStorageID = docStorageDTO.getDocStorageID();
-    this.description = docStorageDTO.getDescription();
-    this.fileName = docStorageDTO.getFileName();
-    this.document = docStorageDTO.getDocument();
-    this.lastUpdatedDateStr = docStorageDTO.getLastUpdatedDateStr();
-    this.dasDocument = docStorageDTO.getDasDocument();
-    this.fileType = docStorageDTO.getFileType();
+//    if(docStorage.getDocument() != null){
+//      this.document = Base64.getEncoder().encodeToString(docStorage.getDocument());
+//    }
   }
 }

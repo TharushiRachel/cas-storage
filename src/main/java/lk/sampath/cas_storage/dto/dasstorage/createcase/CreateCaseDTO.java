@@ -11,10 +11,7 @@ package lk.sampath.cas_storage.dto.dasstorage.createcase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Data
 public class CreateCaseDTO {
@@ -37,23 +34,6 @@ public class CreateCaseDTO {
   @JsonProperty("caseComment")
   private String caseComment;
 
-  /**
-   * SDAS expects the JSON key {@code Property} (capital P). A Java field literally named {@code
-   * Property} makes Lombok expose {@code getProperty()}, which Jackson maps to {@code "property"} by
-   * default, so the payload can send populated data under the wrong key and an empty {@code
-   * "Property"} array.
-   */
-  @Getter(AccessLevel.NONE)
-  @Setter(AccessLevel.NONE)
-  private List<CreateCasePropertyDTO> dasCaseProperties;
-
   @JsonProperty("Property")
-  public List<CreateCasePropertyDTO> getDasCaseProperties() {
-    return dasCaseProperties;
-  }
-
-  @JsonProperty("Property")
-  public void setDasCaseProperties(List<CreateCasePropertyDTO> dasCaseProperties) {
-    this.dasCaseProperties = dasCaseProperties;
-  }
+  private List<CreateCasePropertyDTO> Property;
 }

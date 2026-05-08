@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import lk.sampath.cas_storage.controller.basecontroller.StandardResponse;
 import lk.sampath.cas_storage.dto.DocumentModuleDTO;
+import lk.sampath.cas_storage.dto.DownloadDocumentDTO;
 import lk.sampath.cas_storage.dto.common.DocStorageDTO;
 import lk.sampath.cas_storage.dto.common.SupportingDocIDStorageIDPairDTO;
 import lk.sampath.cas_storage.dto.dasstorage.CaseDocumentsDTO;
@@ -20,10 +21,7 @@ import lk.sampath.cas_storage.dto.dasstorage.CreateRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentDTO;
 import lk.sampath.cas_storage.dto.dasstorage.DasDocumentRequestDTO;
 import lk.sampath.cas_storage.dto.dasstorage.createcase.CreateCaseResponseDTO;
-import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthCombinedListDTO;
-import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthDTO;
-import lk.sampath.cas_storage.dto.facilityPaper.FPDocAuthWithDocumentDTO;
-import lk.sampath.cas_storage.dto.facilityPaper.FPDocumentDTO;
+import lk.sampath.cas_storage.dto.facilityPaper.*;
 import lk.sampath.cas_storage.enums.FPDocStatus;
 import lk.sampath.cas_storage.exception.ApiRequestException;
 import lk.sampath.cas_storage.service.DocumentService;
@@ -31,7 +29,11 @@ import lk.sampath.cas_storage.service.FPDocumentService;
 import lk.sampath.cas_storage.util.RequestLogSanitizer;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -183,10 +185,10 @@ public class DocumentController {
   }
 
   @PostMapping("/temp-with-fp-document")
-  public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(@RequestBody FpDocListDTO request) {
+  public ResponseEntity<StandardResponse<List<FPDocAuthWithDocumentDTO>>> getTempWithFpDocument(@RequestBody FPDocListDTO request) {
     List<FPDocAuthWithDocumentDTO> dto =
             fpDocumentService.getFPDocAuthTempWithFpDocumentByFacilityPaperId(
-                    request.getFacilityPaperId(), request.getDocStatus());
+                    request.getFacilityPaperID(), request.getDocStatus());
     return new ResponseEntity<>(
             new StandardResponse<>(true, "Fetched Successfully", dto),
             HttpStatus.OK
@@ -206,5 +208,32 @@ public class DocumentController {
             new StandardResponse<>(true, "Fetched Successfully", dto),
             HttpStatus.OK
     );
+  }
+
+  @PostMapping("/deactivateFPDocument")
+  public ResponseEntity<StandardResponse<FPDocumentDTO>> deactivateFPDocument(@RequestBody FPDocumentDTO request) {
+    FPDocumentDTO dto = fpDocumentService.deactivateFPDocument(request.getFpDocumentID());
+    return new ResponseEntity<>(
+            new StandardResponse<>(true, "Fetched Successfully", dto),
+            HttpStatus.OK
+    );
+  }
+
+
+  @GetMapping("/downloadFPDocument/{fpDocumentId}")
+  public ResponseEntity<Resource> downloadFPDocument(
+          @PathVariable Integer fpDocumentId)
+          throws ApiRequestException, IOException {
+
+    //byte[] file = fpDocumentService.downloadFPDocument(fpDocumentId);
+    DownloadDocumentDTO downloadDocumentDTO = fpDocumentService.downloadFPDocument(fpDocumentId);
+    ByteArrayResource resource = new ByteArrayResource(downloadDocumentDTO.getDocument());
+
+    return ResponseEntity.ok()
+            .contentLength(downloadDocumentDTO.getDocument().length)
+            .contentType(MediaType.APPLICATION_PDF)
+            .header(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + downloadDocumentDTO.getFileName() + "\"")
+            .body(resource);
   }
 }

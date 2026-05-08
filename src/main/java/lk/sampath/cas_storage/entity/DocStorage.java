@@ -35,6 +35,7 @@ public class DocStorage implements Serializable {
   private String fileName;
 
   @Column(name = "DOCUMENT_BYTE")
+  @Lob
   private byte[] document;
 
   @Temporal(TemporalType.TIMESTAMP)

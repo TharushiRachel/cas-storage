@@ -2,7 +2,6 @@ import {
   Component,
   ElementRef,
   Input,
-  OnChanges,
   OnInit,
   SimpleChanges,
   ViewChild,
@@ -13,36 +12,31 @@ import { SETTINGS } from "src/app/core/setting/commons.settings";
 import { ApplicationService } from "src/app/core/service/application/application.service";
 import { Constants } from "src/app/core/setting/constants";
 import { FacilityPaperAddEditService } from "src/app/views/pages/facility-paper/services/facility-paper-add-edit.service";
-import { AlertService } from "src/app/core/service/common/alert.service";
-import { FPDocService } from "src/app/services/fp-doc.service";
 import {
-  DocStorageDTO,
   DasDocumentRequestDTO,
+  DocStorageDTO,
   FPDocAuthDTO,
   FPDocAuthWithDocumentDTO,
   FPDocumentDTO,
   StandardResponse,
-} from "src/app/models/fp-doc.model";
+} from "src/app/views/pages/facility-paper/dto/fp-doc-model-dto";
+import { AlertService } from "src/app/core/service/common/alert.service";
+import { ConfirmationDialogComponent } from "src/app/shared/components/confirmation-dialog/confirmation-dialog.component";
+import * as _ from "lodash";
+import { HttpClient } from "@angular/common/http";
 
-/** Accepts several backend / BFF envelope shapes and yields raw list items to map. */
+/** Accepts several backend envelope shapes and yields raw list items to map. */
 function extractRawAttachmentList(data: unknown): unknown[] {
   if (data == null) {
     return [];
   }
-  let cur: unknown = data;
-  if (typeof cur === "object" && cur !== null && "result" in cur) {
-    const inner = (cur as { result: unknown }).result;
-    if (inner != null) {
-      cur = inner;
-    }
+  if (Array.isArray(data)) {
+    return data;
   }
-  if (Array.isArray(cur)) {
-    return cur;
-  }
-  if (typeof cur !== "object" || cur === null) {
+  if (typeof data !== "object") {
     return [];
   }
-  const o = cur as { response?: unknown };
+  const o = data as { response?: unknown; success?: unknown };
   if (Array.isArray(o.response)) {
     return o.response;
   }
@@ -54,8 +48,8 @@ function extractRawAttachmentList(data: unknown): unknown[] {
   templateUrl: "./fp-post-approval-attachment.component.html",
   styleUrls: ["./fp-post-approval-attachment.component.scss"],
 })
-export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
-  modalRef: MDBModalRef;
+export class FpPostApprovalAttachmentComponent implements OnInit {
+  modalRef!: MDBModalRef;
   @Input("facilityPaper") facilityPaper: any = {};
   masterDataPrivilege = SETTINGS.PRIVILEGES;
   facilityPaperStatusConst = Constants.facilityPaperStatusConst;
@@ -69,10 +63,12 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
     private applicationService: ApplicationService,
     private facilityPaperAddEditService: FacilityPaperAddEditService,
     private alertService: AlertService,
-    private fpDocService: FPDocService
+    private http: HttpClient,
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    console.log("facility paper object", this.facilityPaper);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["facilityPaper"]) {
@@ -107,7 +103,7 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
         }
         const raw = extractRawAttachmentList(data);
         this.fpAuthWithDocuments = raw.map((item) =>
-          this.normalizeAuthWithDocument(item)
+          this.normalizeAuthWithDocument(item),
         );
       })
       .catch((err: unknown) => {
@@ -119,7 +115,7 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
       });
   }
 
-  openModalAttachmentUpload(facilityPaper: unknown) {
+  openModalAttachmentUpload(facilityPaper: any) {
     const initialState = {
       list: [{ tag: "Count", value: facilityPaper }],
     };
@@ -138,26 +134,19 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
         animated: false,
         data: {
           heading: "comming dto",
-          content: { facilityPaper },
+          content: { facilityPaper: facilityPaper },
         },
-      }
+      },
     );
   }
 
   private isErrorEnvelope(
-    data: unknown
+    data: unknown,
   ): data is { success: false; message?: string } {
     if (data == null || typeof data !== "object") {
       return false;
     }
-    let cur: unknown = data;
-    if ("result" in data) {
-      const inner = (data as { result: unknown }).result;
-      if (inner != null && typeof inner === "object") {
-        cur = inner;
-      }
-    }
-    return (cur as { success?: unknown }).success === false;
+    return (data as { success?: unknown }).success === false;
   }
 
   private normalizeAuthWithDocument(item: unknown): FPDocAuthWithDocumentDTO {
@@ -210,10 +199,14 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
   }
 
   isEqualLoginAndAssignUser() {
-    return (
+    if (
       this.facilityPaper.currentAssignUserID ==
       this.applicationService.getLoggedInUserUserID()
-    );
+    ) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   isApproveStatus() {
@@ -231,205 +224,107 @@ export class FpPostApprovalAttachmentComponent implements OnInit, OnChanges {
   }
 
   isEAC() {
-    return this.facilityPaper.currentAssignUser === "EAC";
+    return this.facilityPaper.currentAssignUser == "EAC";
   }
 
   isAC() {
-    return this.facilityPaper.currentAssignUser === "AC";
+    return this.facilityPaper.currentAssignUser == "AC";
   }
 
   checkUploadAttachmentPrivilege() {
     return true;
+    // if (this.isApproveStatus() && this.isEAC() || this.isAC() && this.isApproveStatus()) {
+    //   return true;
+    // } else {
+    //   return false;
+    // }
   }
 
-  isUploadedDiv(data: FPDocumentDTO) {
+  isUploadedDiv(data: any) {
     return (
       this.applicationService.getLoggedInUserDivCode() == data.uploadedDivCode
     );
   }
 
-  /**
-   * Preview (e.g. PDF): same {@link FPDocService.getFPDocumentById} response, open in new tab.
-   */
-  onDownloadDoc(item: FPDocAuthWithDocumentDTO): void {
-    const doc = item.fpDocument;
-    if (!doc || doc.fpDocumentID == null) {
-      return;
-    }
-    const payload = this.buildDasDocumentRequest(doc);
-    this.fpDocService
-      .getFPDocumentById(payload)
-      .then((raw: unknown) => {
-        const parsed = this.readStandardPayload<FPDocumentDTO>(raw);
-        if (!parsed.ok) {
-          this.alertService.showToaster(
-            parsed.message || "Could not load document",
-            SETTINGS.TOASTER_MESSAGES.error
-          );
-          return;
-        }
-        const extracted = this.extractBase64FromFpdocument(parsed.value);
-        if (!extracted.b64) {
-          this.alertService.showToaster(
-            "No file bytes in response",
-            SETTINGS.TOASTER_MESSAGES.error
-          );
-          return;
-        }
-        const mime =
-          extracted.mime && extracted.mime !== "application/octet-stream"
-            ? extracted.mime
-            : "application/pdf";
-        window.open("data:" + mime + ";base64," + extracted.b64, "_blank");
-      })
-      .catch(() => {
-        this.alertService.showToaster(
-          "Request failed",
-          SETTINGS.TOASTER_MESSAGES.error
-        );
-      });
-  }
+  downloadDocument(item: any) {
 
-  /**
-   * Primary path: {@link FPDocService.getFPDocumentById} (HTTP → cas-storage DocumentController).
-   * Avoids `documentId: null` in JSON; only sends `documentId` when `documentReference` is set.
-   */
-  downloadDocument(item: FPDocAuthWithDocumentDTO): void {
-    const doc = item.fpDocument;
-    if (!doc || doc.fpDocumentID == null) {
+    let fpDocumentId = null;
+
+    if (item && item.fpDocument && item.fpDocument.fpDocumentID) {
+      fpDocumentId = item.fpDocument.fpDocumentID;
+    }
+
+    if (!fpDocumentId) {
       this.alertService.showToaster(
-        "Missing document reference",
-        SETTINGS.TOASTER_MESSAGES.error
+        "Document ID not found",
+        SETTINGS.TOASTER_MESSAGES.error,
       );
+
       return;
     }
-
-    const payload = this.buildDasDocumentRequest(doc);
-
-    this.fpDocService
-      .getFPDocumentById(payload)
-      .then((raw: unknown) => {
-        const parsed = this.readStandardPayload<FPDocumentDTO>(raw);
-        if (!parsed.ok) {
-          this.alertService.showToaster(
-            parsed.message || "Could not load document",
-            SETTINGS.TOASTER_MESSAGES.error
-          );
-          return;
+    this.loadingList = true;
+    this.facilityPaperAddEditService.downloadFPDocument(fpDocumentId).subscribe(
+      (response: any) => {
+        const blob = response.body;
+        let fileName = "downloaded_file.pdf";
+        const contentDisposition = response.headers.get("content-disposition");
+        if (contentDisposition) {
+          const matches = /filename="([^"]*)"/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            fileName = matches[1];
+          }
         }
-        const fp = parsed.value;
-        const extracted = this.extractBase64FromFpdocument(fp);
-        if (!extracted.b64) {
-          this.alertService.showToaster(
-            "No file bytes in response",
-            SETTINGS.TOASTER_MESSAGES.error
-          );
-          return;
-        }
-        const fileName =
-          (fp.docStorageDTO && fp.docStorageDTO.fileName) ||
-          doc.documentName ||
-          "attachment";
-        this.saveBase64AsFile(fileName, extracted.b64, extracted.mime);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
         this.alertService.showToaster(
           "Document downloaded successfully",
-          SETTINGS.TOASTER_MESSAGES.success
+          SETTINGS.TOASTER_MESSAGES.success,
         );
-      })
-      .catch(() => {
+        this.loadingList = false;
+      },
+      (error: any) => {
+        console.error("Download failed", error);
         this.alertService.showToaster(
-          "Request failed",
-          SETTINGS.TOASTER_MESSAGES.error
+          "Failed to download document",
+          SETTINGS.TOASTER_MESSAGES.error,
         );
+        this.loadingList = false;
+      },
+    );
+  }
+
+  remove(item: any) {
+    if (!_.isEmpty(item)) {
+      let data = Object.assign(
+        {},
+        { fpDocumentID: item.fpDocument.fpDocumentID },
+      );
+
+      this.modalRef = this.mdbModalService.show(ConfirmationDialogComponent, {
+        backdrop: true,
+        keyboard: true,
+        focus: true,
+        show: false,
+        ignoreBackdropClick: true,
+        class: "modal-width-30-p modal-margin-center ",
+        containerClass: "",
+        animated: true,
+        data: {
+          heading: "Confirm Remove Document",
+          message: "Do you want to remove this document ?",
+        },
       });
-  }
-
-  /** Matches Postman: include `documentId: null` when there is no DAS reference */
-  private buildDasDocumentRequest(doc: FPDocumentDTO): DasDocumentRequestDTO {
-    const ref =
-      doc.documentReference != null ? String(doc.documentReference).trim() : "";
-    return {
-      fpDocumentID: doc.fpDocumentID as number,
-      caseId: doc.caseId,
-      documentId: ref !== "" ? ref : null,
-    };
-  }
-
-  private peelCorporateEnvelope(body: unknown): unknown {
-    if (body != null && typeof body === "object" && "result" in body) {
-      const inner = (body as { result: unknown }).result;
-      if (inner != null) {
-        return inner;
-      }
-    }
-    return body;
-  }
-
-  private readStandardPayload<T>(
-    raw: unknown
-  ): { ok: true; value: T } | { ok: false; message: string } {
-    const body = this.peelCorporateEnvelope(raw);
-    if (body == null || typeof body !== "object") {
-      return { ok: false, message: "Invalid response" };
-    }
-    const s = body as StandardResponse<T>;
-    if (s.success === false) {
-      return { ok: false, message: s.message || "Error" };
-    }
-    const payload =
-      s.response !== undefined && s.response !== null ? s.response : s.data;
-    if (payload == null) {
-      return { ok: false, message: s.message || "Empty response" };
-    }
-    return { ok: true, value: payload as T };
-  }
-
-  private extractBase64FromFpdocument(fp: FPDocumentDTO): { b64?: string; mime: string } {
-    let mime = "application/octet-stream";
-    const das = fp.dasDocumentDTO;
-    if (das && (das.base64Str || das.base64StrOrig)) {
-      if (das.contentType) {
-        mime = das.contentType;
-      }
-      return { b64: das.base64Str || das.base64StrOrig, mime };
-    }
-    const ds: DocStorageDTO | undefined = fp.docStorageDTO;
-    if (ds) {
-      const b64 =
-        (typeof ds.document === "string" && ds.document) ||
-        (typeof ds.dasDocument === "string" && ds.dasDocument);
-      if (b64) {
-        const ft = ds.fileType;
-        if (ft && ft.indexOf("/") !== -1) {
-          mime = ft;
-        } else if (ft && /^pdf$/i.test(String(ft).trim())) {
-          mime = "application/pdf";
+      this.modalRef.content.action.subscribe((isYes: any) => {
+        if (isYes) {
+          this.facilityPaperAddEditService.deactivateFPDocument(data);
         }
-        return { b64, mime };
-      }
-    }
-    return { mime };
-  }
-
-  private saveBase64AsFile(
-    fileName: string,
-    base64: string,
-    mime: string
-  ): void {
-    const byteString = atob(base64);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-    const blob = new Blob([ab], { type: mime || "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
-    const a = this.downloadLink && this.downloadLink.nativeElement;
-    if (a) {
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
+      });
     }
   }
 }
