@@ -18,7 +18,7 @@ import { ApplicationService } from "../../../../core/service/application/applica
 import * as _ from "lodash";
 import { PrivilegeService } from "../../../../core/service/authentication/privilege.service";
 import { CribDetailsSaveDTO } from "../../../../shared/dto/CribDetailsSaveDTO";
-import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
+import { HttpClient, HttpResponse } from "@angular/common/http";
 import * as moment from "moment";
 import { AlertService } from "src/app/core/service/common/alert.service";
 import { map, distinctUntilChanged, tap } from "rxjs/operators";
@@ -3653,19 +3653,18 @@ export class FacilityPaperAddEditService implements Resolve<any> {
     });
   }
 
+  /**
+   * Same auth shape as CAS calls via {@link DataService} POST/GET: session cookies only,
+   * {@code withCredentials}, no custom headers — avoids CORS preflight + 403 from gateways
+   * that accept cookie sessions but reject ad‑hoc Bearer on GET.
+   */
   downloadFPDocument(
     fpDocumentId: number,
   ): Observable<HttpResponse<Blob>> {
     const url = `${environment.casStorageBaseUrl}/api/downloadFPDocument/${fpDocumentId}`;
-    const token = localStorage.getItem("accessToken");
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set("Authorization", `Bearer ${token}`);
-    }
     return this.http.get(url, {
       observe: "response",
       responseType: "blob",
-      headers,
       withCredentials: true,
     });
   }
