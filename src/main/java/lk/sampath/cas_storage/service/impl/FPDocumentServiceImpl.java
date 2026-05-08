@@ -425,38 +425,45 @@ public class FPDocumentServiceImpl implements FPDocumentService {
 
         FPDocument fpDocument = fpDocumentRepository.findById(fpDocumentId).orElseThrow(() -> new ApiRequestException("FP Document not found"));
 
-        if (fpDocument.getDocStorage() == null) {
-            throw new ApiRequestException("Document storage not found");
-        }
-
         byte[] fileData = new byte[0];
 
-        if(fpDocument.getDocStorage().getDocStorageID() != null){
-            DocStorage docStorage = docStorageRepository.findById(fpDocument.getDocStorage().getDocStorageID()).orElseThrow(() -> new ApiRequestException("Stored document not found"));
-            fileData = docStorage.getDocument();
+        if (fpDocument.getDocStorage() != null && fpDocument.getDocStorage().getDocStorageID() != null) {
+            DocStorage docStorage =
+                    docStorageRepository
+                            .findById(fpDocument.getDocStorage().getDocStorageID())
+                            .orElseThrow(() -> new ApiRequestException("Stored document not found"));
+            byte[] stored = docStorage.getDocument();
+            if (stored != null && stored.length > 0) {
+                fileData = stored;
+            }
         }
-        if(fpDocument.getDocumentReference() != null && !fpDocument.getDocumentReference().isBlank()){
+
+        if ((fileData == null || fileData.length == 0)
+                && fpDocument.getDocumentReference() != null
+                && !fpDocument.getDocumentReference().isBlank()) {
+            if (fpDocument.getCaseId() == null || fpDocument.getCaseId().isBlank()) {
+                throw new ApiRequestException("Case id is required to fetch document");
+            }
             DasDocumentRequestDTO dasDocumentRequestDTO = new DasDocumentRequestDTO();
             dasDocumentRequestDTO.setCaseId(fpDocument.getCaseId());
             dasDocumentRequestDTO.setDocumentId(fpDocument.getDocumentReference());
-            DasDocumentDTO dasDocumentDTO = documentService.fetchDocumentFromIntegrationService(dasDocumentRequestDTO);
+            DasDocumentDTO dasDocumentDTO =
+                    documentService.fetchDocumentFromIntegrationService(dasDocumentRequestDTO);
             String dasDocument = dasDocumentDTO.getBase64StrOrig();
+            if (dasDocument == null || dasDocument.isBlank()) {
+                throw new ApiRequestException("Document content is empty");
+            }
             fileData = Base64.getDecoder().decode(dasDocument);
         }
 
-
-
         if (fileData == null || fileData.length == 0) {
-            throw new ApiRequestException(
-                    "Document content is empty");
+            throw new ApiRequestException("Document content is empty");
         }
 
         DownloadDocumentDTO downloadDocumentDTO = new DownloadDocumentDTO();
         downloadDocumentDTO.setDocument(fileData);
         downloadDocumentDTO.setFileName(fpDocument.getDocumentName());
 
-
-        //return fileData;
         log.info("END : downloadFPDocument : {}", fpDocumentId);
         return downloadDocumentDTO;
     }

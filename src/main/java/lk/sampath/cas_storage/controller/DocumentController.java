@@ -229,11 +229,16 @@ public class DocumentController {
     DownloadDocumentDTO downloadDocumentDTO = fpDocumentService.downloadFPDocument(fpDocumentId);
     ByteArrayResource resource = new ByteArrayResource(downloadDocumentDTO.getDocument());
 
+    String fileName = downloadDocumentDTO.getFileName();
+    if (fileName == null || fileName.isBlank()) {
+      fileName = "document.pdf";
+    }
+
     return ResponseEntity.ok()
             .contentLength(downloadDocumentDTO.getDocument().length)
             .contentType(MediaType.APPLICATION_PDF)
             .header(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + downloadDocumentDTO.getFileName() + "\"")
+                    "attachment; filename=\"" + fileName.replace("\"", "") + "\"")
             .body(resource);
   }
 }

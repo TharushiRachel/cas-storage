@@ -18,13 +18,14 @@ import { ApplicationService } from "../../../../core/service/application/applica
 import * as _ from "lodash";
 import { PrivilegeService } from "../../../../core/service/authentication/privilege.service";
 import { CribDetailsSaveDTO } from "../../../../shared/dto/CribDetailsSaveDTO";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
 import * as moment from "moment";
 import { AlertService } from "src/app/core/service/common/alert.service";
 import { map, distinctUntilChanged, tap } from "rxjs/operators";
 import { STORAGE_SETTINGS } from "./storage-endpoints";
 import { FPDocumentDTO, StandardResponse } from "../dto/fp-doc-model-dto";
 import { Config } from "src/app/core/setting/config";
+import { environment } from "../../environments/environment";
 
 @Injectable()
 export class FacilityPaperAddEditService implements Resolve<any> {
@@ -3652,15 +3653,21 @@ export class FacilityPaperAddEditService implements Resolve<any> {
     });
   }
 
-  downloadFPDocument(fpDocumentId: number) {
-    const conf = Object.assign(
-      {},
-      STORAGE_SETTINGS.ENDPOINTS.downloadFPDocument,
-    );
-
-    conf.url = `${conf.url}/${fpDocumentId}`;
-
-    return this.dataService.getBlob(conf);
+  downloadFPDocument(
+    fpDocumentId: number,
+  ): Observable<HttpResponse<Blob>> {
+    const url = `${environment.casStorageBaseUrl}/api/downloadFPDocument/${fpDocumentId}`;
+    const token = localStorage.getItem("accessToken");
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set("Authorization", `Bearer ${token}`);
+    }
+    return this.http.get(url, {
+      observe: "response",
+      responseType: "blob",
+      headers,
+      withCredentials: true,
+    });
   }
 
   // downloadFPPostDocument(fpDocumentId: number) {
